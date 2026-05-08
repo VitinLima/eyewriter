@@ -1,0 +1,58 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File with Arguments",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": "${command:pickArgs}"
+        },
+        // {
+        //     "name": "Python Debugger: Current File with Arguments",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "${file}",
+        //     "console": "integratedTerminal",
+        //     "args": "--filter kalman --background ./writer-tree.jpg ${command:pickArgs}"
+        // },
+        {
+            "name": "fast test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "App2.py",
+            "console": "integratedTerminal",
+            "args": "--calibration ${input:calibration} --filter ${input:filter} ${command:pickArgs}"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "filter",
+            "description": "filter type",
+            "type": "pickString",
+            "options": [
+                "kalman",
+                "kalman_ema",
+                "kde",
+                "None"
+            ],
+            "default": "kalman"
+        },
+        {
+            "id": "calibration",
+            "description": "calibration type",
+            "type": "pickString",
+            "options": [
+                "5p",
+                "9p",
+                "dense",
+                "lissajous"
+            ],
+            "default": "5p"
+        }
+    ]
+}
