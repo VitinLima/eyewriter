@@ -89,17 +89,21 @@ class Letter:
         self.right_child = None
 
 def run_demo():
+    cv2.namedWindow("thumbnail")
+    cv2.setWindowProperty("thumbnail", cv2.WND_PROP_FULLSCREEN, cv2.WND_PROP_AUTOSIZE)
+    
     CHAR_LIST = 'AEOSR INDMU TCLPV GHQBF ZJXKW Y'
+    letters_list = [c for c in CHAR_LIST] + ['SPACE']
     CHAR_POS = {}
     N = 1
     n = 0
     l = 0.2
-    letter = Letter(CHAR_LIST[0], x=0.5, y=0.1)
-    CHARS = {CHAR_LIST[0]: letter}
+    letter = Letter(letters_list[0], x=0.5, y=0.1)
+    CHARS = {letters_list[0]: letter}
     parent_line = [letter]
     current_line = []
     spacing=0.1
-    for c in CHAR_LIST[1:]:
+    for c in letters_list[1:]:
         if c==' ':
             continue
         parent = parent_line[n]
@@ -303,9 +307,10 @@ def run_demo():
                     y_pred -= offsety
                     draw_cursor(canvas, x_pred, y_pred, cursor_alpha)
 
-                thumb = make_thumbnail(frame, size=(cam_width, cam_height), border=BORDER)
-                h, w = thumb.shape[:2]
-                canvas[-h - MARGIN : -MARGIN, -w - MARGIN : -MARGIN] = thumb
+                cv2.imshow("thumbnail", frame)
+                # thumb = make_thumbnail(frame, size=(cam_width, cam_height), border=BORDER)
+                # h, w = thumb.shape[:2]
+                # canvas[-h - MARGIN : -MARGIN, -w - MARGIN : -MARGIN] = thumb
 
                 now = time.time()
                 fps = 1 / (now - prev_time)
