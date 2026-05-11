@@ -8,6 +8,7 @@ from enum import StrEnum, auto
 
 import cv2
 import numpy as np
+import screeninfo
 
 from eyetrax.calibration import (
     run_5_point_calibration,
@@ -97,16 +98,17 @@ def run_demo():
     CHARS = {CHAR_LIST[0]: letter}
     parent_line = [letter]
     current_line = []
+    spacing=0.1
     for c in CHAR_LIST[1:]:
         if c==' ':
             continue
         parent = parent_line[n]
         if parent.left_child is None:
-            x = parent.x - 0.2/N
+            x = parent.x - spacing/N
             letter = Letter(char=c, parent=parent, x=x, y=l)
             parent.left_child = letter
         else:
-            x = parent.x + 0.2/N
+            x = parent.x + spacing/N
             letter = Letter(char=c, parent=parent, x=x, y=l)
             parent.right_child = letter
             n += 1
@@ -115,18 +117,21 @@ def run_demo():
         if n == N:
             n = 0
             N *= 2
-            l += 0.1
+            l += 0.09
             parent_line = current_line
             current_line = []
     CURRENT_PHRASE_LINE = l+0.1
-    threshold_top = 1.1
-    threshold_bot = 0.6
+    threshold_top = 0.9
+    threshold_bot = 0.5
     threshold_sides = 0.7
     diagonal_threshold = 0.5*pi/4
     action_threshold = 0.4
     recalibration_threshold = 3
     offsetx = 0
     offsety = 0
+    Sx = -10
+    Sy = 10
+    SS = 20
 
     current_key = CHARS[CHAR_LIST[0]]
     last_dir = DIRECTION.NONE
@@ -134,17 +139,20 @@ def run_demo():
     t0 = time.time()
     blink_t0 = t0
     cooldown = False
-
-    screen_width, screen_height = get_screen_size()
         
     args = parse_common_args()
 
     filter_method = args.filter
     camera_index = args.camera
+    screen_index = args.screen
+    camera_rotate = args.camera_rotate
     calibration_method = args.calibration
     background_path = args.background
     confidence_level = args.confidence
     ema_alpha = args.ema_alpha
+    kde_draw_contours = args.kde_draw_contours
+
+    screen_width, screen_height = get_screen_size(screen_index=screen_index)
 
     gaze_estimator = GazeEstimator(model_name=args.model)
 
@@ -153,19 +161,23 @@ def run_demo():
         print(f"[demo] Loaded gaze model from {args.model_file}")
     else:
         if calibration_method == "9p":
-            run_9_point_calibration(gaze_estimator, camera_index=camera_index)
+            ret = run_9_point_calibration(gaze_estimator, camera_index=camera_index, screen_index=screen_index, camera_rotate=camera_rotate)
         elif calibration_method == "5p":
-            run_5_point_calibration(gaze_estimator, camera_index=camera_index)
+            ret = run_5_point_calibration(gaze_estimator, camera_index=camera_index, screen_index=screen_index, camera_rotate=camera_rotate)
         elif calibration_method == "dense":
-            run_dense_grid_calibration(
+            ret = run_dense_grid_calibration(
                 gaze_estimator,
                 rows=args.grid_rows,
                 cols=args.grid_cols,
                 margin_ratio=args.grid_margin,
                 camera_index=camera_index,
+                screen_index=screen_index,
+                camera_rotate=camera_rotate,
             )
         else:
-            run_lissajous_calibration(gaze_estimator, camera_index=camera_index)
+            ret = run_lissajous_calibration(gaze_estimator, camera_index=camera_index, screen_index=screen_index, camera_rotate=camera_rotate)
+        if not ret:
+            exit()
 
     if filter_method == "kalman":
         kalman = make_kalman()
@@ -189,9 +201,32 @@ def run_demo():
         background = np.zeros((screen_height, screen_width, 3), dtype=np.uint8)
         background[:] = (50, 50, 50)
         for k in CHARS.keys():
+            c = CHARS[k]
+            c_pos = (int(c.x*screen_width), int(c.y*screen_height))
+            c_posS = (int(c.x*screen_width)-Sx, int(c.y*screen_height)-Sy)
+            lc = c.left_child
+            if lc is not None:
+                cv2.line(background,
+                         c_posS,
+                         (int(lc.x*screen_width)-Sx, int(lc.y*screen_height)-Sy),
+                         (255,255,255),
+                         1,
+                         cv2.LINE_AA)
+            rc = c.right_child
+            if rc is not None:
+                cv2.line(background,
+                         c_posS,
+                         (int(rc.x*screen_width)-Sx, int(rc.y*screen_height)-Sy),
+                         (255,255,255),
+                         1,
+                         cv2.LINE_AA)
+            cv2.ellipse(background,
+                        (c_posS, (SS,SS), 0),
+                        (50,50,50),
+                        SS)
             cv2.putText(background,
                         k,
-                        (int(CHARS[k].x*screen_width), int(CHARS[k].y*screen_height)),
+                        c_pos,
                         cv2.FONT_HERSHEY_SIMPLEX,
                         1.2,
                         (255,255,255),
@@ -208,25 +243,34 @@ def run_demo():
     signal_recalibrate = False
     while not signal_exit:
         if signal_recalibrate:
-            signal_recalibrate = False
             if calibration_method == "9p":
-                run_9_point_calibration(gaze_estimator, camera_index=camera_index)
+                ret = run_9_point_calibration(gaze_estimator, camera_index=camera_index, screen_index=screen_index, camera_rotate=camera_rotate)
             elif calibration_method == "5p":
-                run_5_point_calibration(gaze_estimator, camera_index=camera_index)
+                ret = run_5_point_calibration(gaze_estimator, camera_index=camera_index, screen_index=screen_index, camera_rotate=camera_rotate)
             elif calibration_method == "dense":
-                run_dense_grid_calibration(
+                ret = run_dense_grid_calibration(
                     gaze_estimator,
                     rows=args.grid_rows,
                     cols=args.grid_cols,
                     margin_ratio=args.grid_margin,
                     camera_index=camera_index,
+                    screen_index=screen_index,
+                    camera_rotate=camera_rotate,
                 )
             else:
-                run_lissajous_calibration(gaze_estimator, camera_index=camera_index)
+                ret = run_lissajous_calibration(gaze_estimator, camera_index=camera_index, screen_index=screen_index, camera_rotate=camera_rotate)
+            if not ret:
+                exit()
+            signal_recalibrate = False
+            t0 = time.time()
         with camera(camera_index) as cap, fullscreen("Gaze Estimation"):
             prev_time = time.time()
 
             for frame in iter_frames(cap):
+                if camera_rotate == 1:
+                    frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+                elif camera_rotate == 2:
+                    frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
                 features, blink_detected = gaze_estimator.extract_features(frame)
 
                 if blink_detected:
@@ -251,8 +295,8 @@ def run_demo():
 
                 canvas = background.copy()
 
-                if filter_method == "kde" and contours:
-                    cv2.drawContours(canvas, contours, -1, (15, 182, 242), 5)
+                # if filter_method == "kde" and contours and kde_draw_contours:
+                #     cv2.drawContours(canvas, contours, -1, (15, 182, 242), 5)
 
                 if x_pred is not None and y_pred is not None and cursor_alpha > 0:
                     x_pred -= offsetx
@@ -273,7 +317,8 @@ def run_demo():
                     ny = y_pred-screen_height/2
                     any = abs(ny)
                     if anx > (threshold_sides*screen_width/2) or ny > (threshold_bot*screen_height/2) or ny < (-threshold_top*screen_height/2):
-                        if atan2(min(anx,any), max(anx,any)) > diagonal_threshold:
+                        # if atan2(min(anx,any), max(anx,any)) > diagonal_threshold:
+                        if anx > screen_width/2 and any > screen_height/2:
                             angle = atan2(-ny, nx)
                             if angle > 0:
                                 if angle < pi/2:
@@ -321,16 +366,16 @@ def run_demo():
                     2,
                     cv2.LINE_AA,
                 )
-                cv2.putText(
-                    canvas,
-                    f"Looking {dir}",
-                    dir_txt_pos,
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1.2,
-                    blink_clr,
-                    2,
-                    cv2.LINE_AA,
-                )
+                # cv2.putText(
+                #     canvas,
+                #     f"Looking {dir}",
+                #     dir_txt_pos,
+                #     cv2.FONT_HERSHEY_SIMPLEX,
+                #     1.2,
+                #     blink_clr,
+                #     2,
+                #     cv2.LINE_AA,
+                # )
                 cv2.putText(
                     canvas,
                     f"Escrevendo: {current_phrase}",
@@ -341,7 +386,47 @@ def run_demo():
                     2,
                     cv2.LINE_AA,
                 )
-                draw_cursor(canvas, current_key.x*screen_width+5, current_key.y*screen_height+5, cursor_alpha)
+                cv2.putText(
+                    canvas,
+                    f"VERMELHO = CIMA/BAIXO   VERDE = LADOS   AZUL = DIAGONAIS",
+                    (50, int(CURRENT_PHRASE_LINE*screen_height)+100),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.2,
+                    blink_clr,
+                    2,
+                    cv2.LINE_AA,
+                )
+                cv2.putText(
+                    canvas,
+                    f"CIMA = SUBIR   BAIXO = APAGAR",
+                    (50, int(CURRENT_PHRASE_LINE*screen_height)+150),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.2,
+                    blink_clr,
+                    2,
+                    cv2.LINE_AA,
+                )
+                cv2.putText(
+                    canvas,
+                    f"PISCAR 1 SEGUNDO = ESCREVER LETRA",
+                    (50, int(CURRENT_PHRASE_LINE*screen_height)+200),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.2,
+                    blink_clr,
+                    2,
+                    cv2.LINE_AA,
+                )
+                cv2.putText(
+                    canvas,
+                    f"PISCAR 3 SEGUNDOS = RECALIBRAR",
+                    (50, int(CURRENT_PHRASE_LINE*screen_height)+250),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.2,
+                    blink_clr,
+                    2,
+                    cv2.LINE_AA,
+                )
+                draw_cursor(canvas, current_key.x*screen_width-Sx, current_key.y*screen_height-Sy, cursor_alpha)
                 canvas = cv2.copyMakeBorder(canvas, 50,50,50,50, cv2.BORDER_CONSTANT, value=COLORS[dir])
                 
                 tf = now
@@ -379,29 +464,42 @@ def run_demo():
                             current_key = CHARS[CHAR_LIST[0]]
                             current_phrase = current_phrase[:-2] + '_'
                             cooldown = True
-                        elif last_dir==DIRECTION.SOUTHEAST:
-                            tts = gTTS(text=current_phrase, lang='pt-br')
-                            mp3_as_bytes = next(tts.stream())
-                            audio = AudioSegment.from_file(BytesIO(mp3_as_bytes), format="mp3")
-                            play(audio)
+                        # elif last_dir==DIRECTION.SOUTHEAST:
+                        #     tts = gTTS(text=current_phrase, lang='pt-br')
+                        #     mp3_as_bytes = next(tts.stream())
+                        #     audio = AudioSegment.from_file(BytesIO(mp3_as_bytes), format="mp3")
+                        #     play(audio)
+                        # elif last_dir==DIRECTION.SOUTHWEST:
+                        #     current_phrase = '_'
                 last_dir = dir
 
+                screen = screeninfo.get_monitors()[screen_index]
+                cv2.moveWindow("Gaze Estimation", screen.x-1, screen.y-1)
+                cv2.setWindowProperty("Gaze Estimation", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
                 cv2.imshow("Gaze Estimation", canvas)
                 keyboard_pressed = cv2.waitKey(1)
+                print(f"Keyboard pressed: {keyboard_pressed}")
                 if keyboard_pressed == 27:
                     signal_exit = True
                     break
                 elif keyboard_pressed==81:
-                    offsetx -= 1
+                    offsetx -= 10
+                    print(f"offx {offsetx}")
                 elif keyboard_pressed==82:
-                    offsety -= 1
+                    offsety -= 10
+                    print(f"offy {offsety}")
                 elif keyboard_pressed==83:
-                    offsetx += 1
+                    offsetx += 10
+                    print(f"offx {offsetx}")
                 elif keyboard_pressed==84:
-                    offsety += 1
+                    offsety += 10
+                    print(f"offy {offsety}")
                 else:
-                    print(f"Keyboard pressed: {keyboard_pressed}")
+                    pass
 
-
+import traceback
 if __name__ == "__main__":
-    run_demo()
+    try:
+        run_demo()
+    except:
+        print(traceback.format_exc())

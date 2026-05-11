@@ -26,7 +26,7 @@
             "request": "launch",
             "program": "App2.py",
             "console": "integratedTerminal",
-            "args": "--calibration ${input:calibration} --filter ${input:filter} ${command:pickArgs}"
+            "args": "--calibration ${input:calibration} --filter ${input:filter} --camera ${input:camera} --screen ${input:screen} --camera-rotate ${input:camera-rotate} --kde-draw-contours False ${command:pickArgs}"
         }
     ],
     "inputs": [
@@ -53,6 +53,41 @@
                 "lissajous"
             ],
             "default": "5p"
+        },
+        {
+            "id": "camera",
+            "description": "camera index",
+            "type": "pickString",
+            "options": [
+                "0",
+                "1",
+                "2",
+                "3"
+            ],
+            "default": "0"
+        },
+        {
+            "id": "camera-rotate",
+            "description": "Rotate camera image (clockwise: 1; counter clockwise:2)",
+            "type": "pickString",
+            "options": [
+                "0",
+                "1",
+                "2"
+            ],
+            "default": "0"
+        },
+        {
+            "id": "screen",
+            "description": "screen index",
+            "type": "pickString",
+            "options": [
+                "0",
+                "1",
+                "2",
+                "3"
+            ],
+            "default": "0"
         }
     ]
 }
