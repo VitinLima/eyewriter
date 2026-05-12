@@ -79,12 +79,16 @@ COLORS = {
 }
 
 class Letter:
-    def __init__(self, char, parent=None, x=0, y=0):
+    def __init__(self, char, name=None, parent=None, x=0, y=0):
         self.char = char
         self.parent = parent
         self.x = x
         self.y = y
 
+        if name is None:
+            self.name = self.char
+        else:
+            self.name = name
         self.left_child = None
         self.right_child = None
 
@@ -93,17 +97,16 @@ def run_demo():
     cv2.setWindowProperty("thumbnail", cv2.WND_PROP_FULLSCREEN, cv2.WND_PROP_AUTOSIZE)
     
     CHAR_LIST = 'AEOSR INDMU TCLPV GHQBF ZJXKW Y'
-    letters_list = [c for c in CHAR_LIST] + ['SPACE']
     CHAR_POS = {}
     N = 1
     n = 0
     l = 0.2
-    letter = Letter(letters_list[0], x=0.5, y=0.1)
-    CHARS = {letters_list[0]: letter}
+    letter = Letter(CHAR_LIST[0], x=0.5, y=0.1)
+    CHARS = {CHAR_LIST[0]: letter}
     parent_line = [letter]
     current_line = []
     spacing=0.1
-    for c in letters_list[1:]:
+    for c in CHAR_LIST[1:]:
         if c==' ':
             continue
         parent = parent_line[n]
@@ -124,6 +127,20 @@ def run_demo():
             l += 0.09
             parent_line = current_line
             current_line = []
+    
+    parent = parent_line[n]
+    if parent.left_child is None:
+        x = parent.x - spacing/N
+        letter = Letter(char=' ', name='SPACE', parent=parent, x=x, y=l)
+        parent.left_child = letter
+    else:
+        x = parent.x + spacing/N
+        letter = Letter(char=' ', name='SPACE', parent=parent, x=x, y=l)
+        parent.right_child = letter
+        n += 1
+    CHARS[c] = letter
+    current_line += [letter]
+    
     CURRENT_PHRASE_LINE = l+0.1
     threshold_top = 0.9
     threshold_bot = 0.5
@@ -204,8 +221,7 @@ def run_demo():
     else:
         background = np.zeros((screen_height, screen_width, 3), dtype=np.uint8)
         background[:] = (50, 50, 50)
-        for k in CHARS.keys():
-            c = CHARS[k]
+        for c in CHARS.values():
             c_pos = (int(c.x*screen_width), int(c.y*screen_height))
             c_posS = (int(c.x*screen_width)-Sx, int(c.y*screen_height)-Sy)
             lc = c.left_child
@@ -229,10 +245,10 @@ def run_demo():
                         (50,50,50),
                         SS)
             cv2.putText(background,
-                        k,
+                        c.name,
                         c_pos,
                         cv2.FONT_HERSHEY_SIMPLEX,
-                        1.2,
+                        1.4,
                         (255,255,255),
                         2,
                         cv2.LINE_AA,)
