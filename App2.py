@@ -9,6 +9,7 @@ from enum import StrEnum, auto
 import cv2
 import numpy as np
 import screeninfo
+from Dictionary import Letter
 
 from eyetrax.calibration import (
     run_5_point_calibration,
@@ -77,20 +78,6 @@ COLORS = {
     DIRECTION.NO_FACE: (150,0,150),
     DIRECTION.NONE: (150,150,150)
 }
-
-class Letter:
-    def __init__(self, char, name=None, parent=None, x=0, y=0):
-        self.char = char
-        self.parent = parent
-        self.x = x
-        self.y = y
-
-        if name is None:
-            self.name = self.char
-        else:
-            self.name = name
-        self.left_child = None
-        self.right_child = None
 
 def run_demo():
     cv2.namedWindow("thumbnail")
