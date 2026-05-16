@@ -27,7 +27,7 @@ from eyetrax.filters import (
     NoSmoother,
     make_kalman,
 )
-from eyetrax.gaze import GazeEstimator
+# from eyetrax.gaze import GazeEstimator
 from eyetrax.utils.draw import draw_cursor, make_thumbnail
 from eyetrax.utils.screen import get_screen_size
 from eyetrax.utils.video import camera, fullscreen, iter_frames
@@ -84,7 +84,7 @@ COLORS = {
 def run_demo():
     alphabet = load_dictionary_from_json("alphabet.json")
     
-    CURRENT_PHRASE_LINE = alphabet.y_start+alphabet.heigth+0.1
+    CURRENT_PHRASE_LINE = alphabet.y_start+alphabet.height+0.1
     threshold_top = 0.9
     threshold_bot = 0.5
     threshold_sides = 0.7
@@ -121,10 +121,12 @@ def run_demo():
         background = cv2.imread(background_path)
         background = cv2.resize(background, (screen_width, screen_height))
     else:
-        background = draw_background(alphabet, screen_width, screen_height, Sx, Sy, font_scale=1.4)
+        background = draw_background(alphabet, screen_width, screen_height, font_scale=1.4)
+        draw_cursor(background, current_key.x*screen_width, current_key.y*screen_height, 0.5)
     
     if show_background:
-        fullscreen("Gaze Estimation")
+        cv2.namedWindow("Gaze Estimation", cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty("Gaze Estimation", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         screen = screeninfo.get_monitors()[screen_index]
         cv2.moveWindow("Gaze Estimation", screen.x-1, screen.y-1)
         cv2.setWindowProperty("Gaze Estimation", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
@@ -370,7 +372,7 @@ def run_demo():
                     2,
                     cv2.LINE_AA,
                 )
-                draw_cursor(canvas, current_key.x*screen_width-Sx, current_key.y*screen_height-Sy, cursor_alpha)
+                draw_cursor(canvas, current_key.x*screen_width, current_key.y*screen_height, cursor_alpha)
                 canvas = cv2.copyMakeBorder(canvas, 50,50,50,50, cv2.BORDER_CONSTANT, value=COLORS[dir])
                 
                 tf = now

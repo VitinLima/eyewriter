@@ -17,7 +17,7 @@ class Dictionary:
     def __init__(self):
         self.lines = []
         self.entries = {}
-        self.heigth = 0
+        self.height = 0
         self.y_start = 0
 
 def load_dictionary_from_json(fname):
@@ -36,7 +36,7 @@ def load_dictionary_from_json(fname):
     new_dictionary.entries[letter.key] = letter
     new_dictionary.lines = [[letter]]
     new_dictionary.y_start = current_line_y
-    new_dictionary.heigth = current_line_y + line_y_spacing
+    new_dictionary.height = current_line_y + line_y_spacing
     
     new_line = []
     for k, c in zip(KEY_LIST[1:],CHAR_LIST[1:]):
@@ -62,7 +62,7 @@ def load_dictionary_from_json(fname):
             N *= 2
             current_line_y += line_y_spacing
             new_dictionary.lines.append(new_line)
-            new_dictionary.heigth += line_y_spacing
+            new_dictionary.height += line_y_spacing
             new_line = []
     
     parent = new_dictionary.lines[-1][n]
@@ -77,6 +77,6 @@ def load_dictionary_from_json(fname):
         n += 1
     new_line.append(letter)
     new_dictionary.lines.append(new_line)
-    new_dictionary.heigth += line_y_spacing
+    new_dictionary.height += line_y_spacing
     
     return new_dictionary
