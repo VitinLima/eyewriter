@@ -24,9 +24,17 @@
             "name": "fast test",
             "type": "debugpy",
             "request": "launch",
-            "program": "App2.py",
+            "program": "main.py",
             "console": "integratedTerminal",
             "args": "--calibration ${input:calibration} --filter ${input:filter} --camera ${input:camera} --screen ${input:screen} --camera-rotate ${input:camera-rotate} --kde-draw-contours False ${command:pickArgs}"
+        },
+        {
+            "name": "draw background",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "args": "--show-background True ${command:pickArgs}"
         }
     ],
     "inputs": [

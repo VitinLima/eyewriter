@@ -1,0 +1,46 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "echo",
+            "type": "shell",
+            "command": "conda activate ./condaenv ; ",
+            "args": [
+                "p4a",
+                "apk",
+                "--private ./HelloWorld.py",
+                "--package=org.example.App2",
+                "--name \"My application\"",
+                "--version 0.1",
+                "--bootstrap=sdl2",
+                "--requirements=python3",
+                "--arch=arm64-v8a",
+                "--arch=armeabi-v7a"
+            ],
+            "options": {
+                "env": {
+                    "ANDROIDSDK": "$HOME/android-app/",
+                    "ANDROIDNDK": "$HOME/android-app/android-ndk-r27d/",
+                    "ANDROIDAPI": "27",
+                    "NDKAPI": "24",
+                    "ANDROIDNDKVER": "r10e"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "build apk",
+            "type": "shell",
+            "command": "source ./android-build.sh",
+            "args": [
+
+            ],
+            "options": {
+                "env": {
+                    
+                }
+            },
+            "problemMatcher": []
+        }
+    ]
+}

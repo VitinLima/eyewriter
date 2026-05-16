@@ -9,7 +9,9 @@ from enum import StrEnum, auto
 import cv2
 import numpy as np
 import screeninfo
-from Dictionary import Letter
+
+from Dictionary import Dictionary, Entry, generate_dictionary
+from utils import draw_background
 
 from eyetrax.calibration import (
     run_5_point_calibration,
@@ -25,7 +27,7 @@ from eyetrax.filters import (
     NoSmoother,
     make_kalman,
 )
-from eyetrax.gaze import GazeEstimator
+# from eyetrax.gaze import GazeEstimator
 from eyetrax.utils.draw import draw_cursor, make_thumbnail
 from eyetrax.utils.screen import get_screen_size
 from eyetrax.utils.video import camera, fullscreen, iter_frames
@@ -83,52 +85,9 @@ def run_demo():
     cv2.namedWindow("thumbnail")
     cv2.setWindowProperty("thumbnail", cv2.WND_PROP_FULLSCREEN, cv2.WND_PROP_AUTOSIZE)
     
-    CHAR_LIST = 'AEOSR INDMU TCLPV GHQBF ZJXKW Y'
-    CHAR_POS = {}
-    N = 1
-    n = 0
-    l = 0.2
-    letter = Letter(CHAR_LIST[0], x=0.5, y=0.1)
-    CHARS = {CHAR_LIST[0]: letter}
-    parent_line = [letter]
-    current_line = []
-    spacing=0.1
-    for c in CHAR_LIST[1:]:
-        if c==' ':
-            continue
-        parent = parent_line[n]
-        if parent.left_child is None:
-            x = parent.x - spacing/N
-            letter = Letter(char=c, parent=parent, x=x, y=l)
-            parent.left_child = letter
-        else:
-            x = parent.x + spacing/N
-            letter = Letter(char=c, parent=parent, x=x, y=l)
-            parent.right_child = letter
-            n += 1
-        CHARS[c] = letter
-        current_line += [letter]
-        if n == N:
-            n = 0
-            N *= 2
-            l += 0.09
-            parent_line = current_line
-            current_line = []
+    alphabet = generate_dictionary("alphabet.json")
     
-    parent = parent_line[n]
-    if parent.left_child is None:
-        x = parent.x - spacing/N
-        letter = Letter(char=' ', name='SPACE', parent=parent, x=x, y=l)
-        parent.left_child = letter
-    else:
-        x = parent.x + spacing/N
-        letter = Letter(char=' ', name='SPACE', parent=parent, x=x, y=l)
-        parent.right_child = letter
-        n += 1
-    CHARS[c] = letter
-    current_line += [letter]
-    
-    CURRENT_PHRASE_LINE = l+0.1
+    CURRENT_PHRASE_LINE = alphabet.y_start+alphabet.heigth+0.1
     threshold_top = 0.9
     threshold_bot = 0.5
     threshold_sides = 0.7
@@ -139,13 +98,11 @@ def run_demo():
     offsety = 0
     Sx = -10
     Sy = 10
-    SS = 20
 
-    current_key = CHARS[CHAR_LIST[0]]
+    current_key = alphabet.lines[0][0]
     last_dir = DIRECTION.NONE
     current_phrase = "_"
     t0 = time.time()
-    blink_t0 = t0
     cooldown = False
         
     args = parse_common_args()
@@ -159,8 +116,25 @@ def run_demo():
     confidence_level = args.confidence
     ema_alpha = args.ema_alpha
     kde_draw_contours = args.kde_draw_contours
+    show_background = args.show_background
 
     screen_width, screen_height = get_screen_size(screen_index=screen_index)
+
+    if background_path and os.path.isfile(background_path):
+        background = cv2.imread(background_path)
+        background = cv2.resize(background, (screen_width, screen_height))
+    else:
+        background = draw_background(alphabet, screen_width, screen_height, Sx, Sy, font_scale=1.4)
+    
+    if show_background:
+        fullscreen("Gaze Estimation")
+        screen = screeninfo.get_monitors()[screen_index]
+        cv2.moveWindow("Gaze Estimation", screen.x-1, screen.y-1)
+        cv2.setWindowProperty("Gaze Estimation", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.imshow("Gaze Estimation", background)
+        while cv2.waitKey(400) != 27:
+            pass
+        exit(0)
 
     gaze_estimator = GazeEstimator(model_name=args.model)
 
@@ -201,44 +175,6 @@ def run_demo():
     else:
         kalman = None
         smoother = NoSmoother()
-
-    if background_path and os.path.isfile(background_path):
-        background = cv2.imread(background_path)
-        background = cv2.resize(background, (screen_width, screen_height))
-    else:
-        background = np.zeros((screen_height, screen_width, 3), dtype=np.uint8)
-        background[:] = (50, 50, 50)
-        for c in CHARS.values():
-            c_pos = (int(c.x*screen_width), int(c.y*screen_height))
-            c_posS = (int(c.x*screen_width)-Sx, int(c.y*screen_height)-Sy)
-            lc = c.left_child
-            if lc is not None:
-                cv2.line(background,
-                         c_posS,
-                         (int(lc.x*screen_width)-Sx, int(lc.y*screen_height)-Sy),
-                         (255,255,255),
-                         1,
-                         cv2.LINE_AA)
-            rc = c.right_child
-            if rc is not None:
-                cv2.line(background,
-                         c_posS,
-                         (int(rc.x*screen_width)-Sx, int(rc.y*screen_height)-Sy),
-                         (255,255,255),
-                         1,
-                         cv2.LINE_AA)
-            cv2.ellipse(background,
-                        (c_posS, (SS,SS), 0),
-                        (50,50,50),
-                        SS)
-            cv2.putText(background,
-                        c.name,
-                        c_pos,
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        1.4,
-                        (255,255,255),
-                        2,
-                        cv2.LINE_AA,)
 
     cam_width, cam_height = 320, 240
     BORDER = 2

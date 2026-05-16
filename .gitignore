@@ -1,2 +1,6 @@
 /condaenv
 /writer-tree.jpg
+*.pyc
+.buildozer
+/condaenv-new
+/condaenv-bkp
