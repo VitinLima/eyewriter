@@ -20,7 +20,7 @@ class Dictionary:
         self.heigth = 0
         self.y_start = 0
 
-def generate_dictionary(fname):
+def load_dictionary_from_json(fname):
     # with open(fname) as f:
     KEY_LIST = 'AEOSR INDMU TCLPV GHQBF ZJXKW Y'
     CHAR_LIST = 'AEOSR INDMU TCLPV GHQBF ZJXKW Y'

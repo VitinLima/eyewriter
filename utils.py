@@ -3,7 +3,7 @@ import cv2
 
 from Dictionary import Dictionary, Entry
 
-SS = 20
+SCALE_2_SCREEN_FACTOR = 20
 
 def draw_background(dictionary: Dictionary, screen_width, screen_height, Sx, Sy, font_scale=1.4):
     background = np.zeros((screen_height, screen_width, 3), dtype=np.uint8)
@@ -32,9 +32,9 @@ def draw_background(dictionary: Dictionary, screen_width, screen_height, Sx, Sy,
         c_pos = (int(c.x*screen_width), int(c.y*screen_height))
         c_posS = (int(c.x*screen_width)-Sx, int(c.y*screen_height)-Sy)
         cv2.ellipse(background,
-                    (c_posS, (int(font_scale*SS*len(c.key)),int(font_scale*SS)), 0),
+                    (c_posS, (int(font_scale*SCALE_2_SCREEN_FACTOR*len(c.key)),int(font_scale*SCALE_2_SCREEN_FACTOR)), 0),
                     (50,50,50),
-                    int(font_scale*SS))
+                    int(font_scale*SCALE_2_SCREEN_FACTOR))
     
     for c in dictionary.entries.values():
         c_pos = (int(c.x*screen_width), int(c.y*screen_height))

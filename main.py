@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 import screeninfo
 
-from Dictionary import Dictionary, Entry, generate_dictionary
+from Dictionary import Dictionary, Entry, load_dictionary_from_json
 from utils import draw_background
 
 from eyetrax.calibration import (
@@ -27,7 +27,7 @@ from eyetrax.filters import (
     NoSmoother,
     make_kalman,
 )
-# from eyetrax.gaze import GazeEstimator
+from eyetrax.gaze import GazeEstimator
 from eyetrax.utils.draw import draw_cursor, make_thumbnail
 from eyetrax.utils.screen import get_screen_size
 from eyetrax.utils.video import camera, fullscreen, iter_frames
@@ -82,10 +82,7 @@ COLORS = {
 }
 
 def run_demo():
-    cv2.namedWindow("thumbnail")
-    cv2.setWindowProperty("thumbnail", cv2.WND_PROP_FULLSCREEN, cv2.WND_PROP_AUTOSIZE)
-    
-    alphabet = generate_dictionary("alphabet.json")
+    alphabet = load_dictionary_from_json("alphabet.json")
     
     CURRENT_PHRASE_LINE = alphabet.y_start+alphabet.heigth+0.1
     threshold_top = 0.9
@@ -135,6 +132,9 @@ def run_demo():
         while cv2.waitKey(400) != 27:
             pass
         exit(0)
+    
+    cv2.namedWindow("thumbnail")
+    cv2.setWindowProperty("thumbnail", cv2.WND_PROP_FULLSCREEN, cv2.WND_PROP_AUTOSIZE)
 
     gaze_estimator = GazeEstimator(model_name=args.model)
 
