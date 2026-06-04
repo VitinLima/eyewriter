@@ -1,11 +1,6 @@
-/condaenv
-/condaenv-new
-/condaenv-bkp
-
 /venv
-/bkp
+/thirdparty/*
 
-/writer-tree.jpg
 *.pyc
 *.buildozer
 *bin
