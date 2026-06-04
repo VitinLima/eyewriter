@@ -5,36 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Current File with Arguments",
-            "type": "debugpy",
+            "name": "Main",
+            "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "EyeWriter/main.py",
             "console": "integratedTerminal",
-            "args": "${command:pickArgs}"
-        },
-        // {
-        //     "name": "Python Debugger: Current File with Arguments",
-        //     "type": "debugpy",
-        //     "request": "launch",
-        //     "program": "${file}",
-        //     "console": "integratedTerminal",
-        //     "args": "--filter kalman --background ./writer-tree.jpg ${command:pickArgs}"
-        // },
-        {
-            "name": "fast test",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "args": "--calibration ${input:calibration} --filter ${input:filter} --camera ${input:camera} --screen ${input:screen} --camera-rotate ${input:camera-rotate} --kde-draw-contours False ${command:pickArgs}"
+            "args": "main"
         },
         {
-            "name": "draw background",
-            "type": "debugpy",
+            "name": "Test hello",
+            "type": "python",
             "request": "launch",
-            "program": "main.py",
+            "program": "EyeWriter/main.py",
             "console": "integratedTerminal",
-            "args": "--show-background True ${command:pickArgs}"
+            "args": "hello"
         }
     ],
     "inputs": [

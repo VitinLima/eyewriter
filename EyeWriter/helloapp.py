@@ -51,10 +51,7 @@ class DrawingCanvas(BoxLayout):
                                    dtype=np.uint8)
         self.background[:] = (50, 50, 50)
 
-        try:
-            self.cam = Camera(play=True, resolution=(640, 480), index=1)
-        except:
-            self.cam = Camera(play=True, resolution=(640, 480), index=0)
+        self.cam = Camera(play=True, resolution=(640, 480))
 
     def update(self, event):
         with self.canvas:
@@ -89,7 +86,7 @@ class DrawingCanvas(BoxLayout):
 
 class HelloApp(App):
     def build(self):
-        if platform != 'linux':
+        if platform == 'android':
             request_permissions([
                 Permission.CAMERA,
                 Permission.WRITE_EXTERNAL_STORAGE,
