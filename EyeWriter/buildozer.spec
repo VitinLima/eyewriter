@@ -42,11 +42,14 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy
+#requirements = python3,kivy,opencv,mediapipe,numpy=v1.26.4,scikit-learn=v1.8.0,scipy=v1.17.1,screeninfo=v0.8.1,pyvirtualcam=v0.15.0
+requirements = python3,kivy,opencv,eyetrax
+
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
 # requirements.source.kivy = ../../kivy
+# requirements.source.customeyetrax = ./eyetrax_pyproject_recipe
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
@@ -104,9 +107,12 @@ fullscreen = 0
 # (list) Permissions
 # (See https://python-for-android.readthedocs.io/en/latest/buildoptions.html for all the supported syntaxes and properties)
 #android.permissions = android.permission.INTERNET, (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
+android.permissions = android.permission.CAMERA
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
+#android.features = android.hardware.camera, android.hardware.camera.autofocus, android.hardware.camera.front, android.hardware.camera.front.autofocus
+#;required=false), (name=android.hardware.camera.autofocus;required=false), (name=android.hardware.camera.front;required=false), (name=android.hardware.camera.front.autofocus;required=false)
 
 # (int) Target Android API, should be as high as possible.
 #android.api = 33
@@ -220,12 +226,12 @@ fullscreen = 0
 # this can for example be necessary when importing certain java libraries using the 'android.gradle_dependencies' option
 # see https://developer.android.com/studio/write/java8-support for further information
 # android.add_compile_options = "sourceCompatibility = 1.8", "targetCompatibility = 1.8"
+android.add_compile_options = "-Xmx2048M"
 
 # (list) Gradle repositories to add {can be necessary for some android.gradle_dependencies}
 # please enclose in double quotes 
 # e.g. android.gradle_repositories = "maven { url 'https://repo.spring.io/release' }"
 #android.add_gradle_repositories =
-
 # (list) packaging options to add
 # see https://developer.android.com/reference/tools/gradle-api/7.1/com/android/build/api/dsl/PackagingOptions
 # can be necessary to solve conflicts in gradle_dependencies
@@ -344,7 +350,7 @@ android.allow_backup = True
 #p4a.source_dir =
 
 # (str) The directory in which python-for-android should look for your own build recipes (if any)
-#p4a.local_recipes =
+p4a.local_recipes = ../Recipes
 
 # (str) Filename to the hook for p4a
 #p4a.hook =

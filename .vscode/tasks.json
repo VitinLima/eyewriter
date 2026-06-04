@@ -2,36 +2,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "echo",
+            "label": "debug",
             "type": "shell",
-            "command": "conda activate ./condaenv ; ",
-            "args": [
-                "p4a",
-                "apk",
-                "--private ./HelloWorld.py",
-                "--package=org.example.App2",
-                "--name \"My application\"",
-                "--version 0.1",
-                "--bootstrap=sdl2",
-                "--requirements=python3",
-                "--arch=arm64-v8a",
-                "--arch=armeabi-v7a"
-            ],
-            "options": {
-                "env": {
-                    "ANDROIDSDK": "$HOME/android-app/",
-                    "ANDROIDNDK": "$HOME/android-app/android-ndk-r27d/",
-                    "ANDROIDAPI": "27",
-                    "NDKAPI": "24",
-                    "ANDROIDNDKVER": "r10e"
-                }
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "build apk",
-            "type": "shell",
-            "command": "source ./android-build.sh",
+            "command": "source ./venv/bin/activate ; cd EyeWriter/ ; ( rm ./buildlog.txt || true) && buildozer android debug | tee ./buildlog.txt",
             "args": [
 
             ],
@@ -41,6 +14,50 @@
                 }
             },
             "problemMatcher": []
+        },
+        {
+            "label": "deploy run logcat",
+            "type": "shell",
+            "command": "source ./venv/bin/activate ; cd EyeWriter/ ; buildozer android deploy run logcat | grep \"python\"",
+            "args": [
+
+            ],
+            "options": {
+                "env": {
+                    
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "press-key-to-continue",
+            "type": "shell",
+            "command": "echo \"Press Enter to continue...\" ; read",
+            "args": [
+
+            ],
+            "options": {
+                "env": {
+                    
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "debug deploy run logcat",
+            "type": "shell",
+            "command": "",
+            "args": [
+
+            ],
+            "options": {
+                "env": {
+                    
+                }
+            },
+            "problemMatcher": [],
+            "dependsOn": ["debug", "press-key-to-continue", "deploy run logcat"],
+            "dependsOrder": "sequence"
         }
     ]
 }

@@ -1,0 +1,3 @@
+[submodule "EyeTrax"]
+	path = EyeTrax
+	url = https://github.com/ck-zhang/EyeTrax.git
