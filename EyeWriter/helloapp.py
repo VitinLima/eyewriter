@@ -27,6 +27,7 @@ if platform != 'linux':
     from android.permissions import request_permissions, Permission
 # import time
 
+import eyetrax
 # from eyetrax.utils.video import fullscreen
 # from kivy.uix import camera
 # from eyetrax.utils.screen import get_screen_size
