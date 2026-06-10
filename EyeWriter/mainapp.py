@@ -12,10 +12,10 @@ import numpy as np
 import screeninfo
 
 from Dictionary import (
-    # Dictionary,
-    # Entry,
+    Dictionary,
+    Entry,
     load_dictionary_from_json
-    )
+)
 from utils import draw_background
 
 from eyetrax.calibration import (
@@ -32,11 +32,11 @@ from eyetrax.filters import (
     NoSmoother,
     make_kalman,
 )
-# from eyetrax.gaze import GazeEstimator
+from eyetrax.gaze import GazeEstimator
 from eyetrax.utils.draw import (
     draw_cursor,
     # make_thumbnail
-    )
+)
 from eyetrax.utils.screen import get_screen_size
 from eyetrax.utils.video import camera, fullscreen, iter_frames
 
@@ -95,7 +95,7 @@ COLORS = {
 
 
 def run_demo():
-    alphabet = load_dictionary_from_json("alphabet.json")
+    alphabet:Dictionary = load_dictionary_from_json("alphabet.json")
 
     CURRENT_PHRASE_LINE = alphabet.y_start+alphabet.height+0.1
     threshold_top = 0.9
@@ -109,7 +109,7 @@ def run_demo():
     # Sx = -10
     # Sy = 10
 
-    current_key = alphabet.lines[0][0]
+    current_key:Entry = alphabet.lines[0][0]
     last_dir = DIRECTION.NONE
     current_phrase = "_"
     t0 = time.time()
@@ -305,11 +305,11 @@ def run_demo():
                 prev_time = now
 
                 if dir == DIRECTION.NONE and x_pred is not None and y_pred is not None:
-                    nx = x_pred-screen_width/2
+                    nx = x_pred - screen_width/2
                     anx = abs(nx)
-                    ny = y_pred-screen_height/2
+                    ny = y_pred - screen_height/2
                     any = abs(ny)
-                    if anx > (threshold_sides*screen_width/2) or ny > (threshold_bot*screen_height/2) or ny < (-threshold_top*screen_height/2):
+                    if anx > (threshold_sides * screen_width/2) or ny > (threshold_bot * screen_height/2) or ny < (-threshold_top*screen_height/2):
                         # if atan2(min(anx,any), max(anx,any)) > diagonal_threshold:
                         if anx > screen_width/2 and any > screen_height/2:
                             angle = atan2(-ny, nx)
@@ -335,7 +335,7 @@ def run_demo():
                                 dir = DIRECTION.UP
                     else:
                         dir = DIRECTION.CENTER
-                    dir_txt_pos = (50+x_pred, y_pred)
+                    dir_txt_pos = (50 + x_pred, y_pred)
 
                 cv2.putText(
                     canvas,
@@ -443,9 +443,9 @@ def run_demo():
                         if last_dir == DIRECTION.CENTER:
                             cooldown = False
                         elif last_dir == DIRECTION.BLINK:
-                            print(f"Selected key: {current_key.char}")
-                            current_phrase = current_phrase[:-1] + current_key.char + '_'
-                            current_key = CHARS[CHAR_LIST[0]]
+                            print(f"Selected key: {current_key.key}")
+                            current_phrase = current_phrase[:-1] + current_key.key + '_'
+                            current_key = alphabet.lines[0][0]  # CHARS[CHAR_LIST[0]]
                             cooldown = True
                         elif last_dir == DIRECTION.UP:
                             if current_key.parent is not None:
@@ -460,7 +460,7 @@ def run_demo():
                                 current_key = current_key.right_child
                                 cooldown = True
                         elif last_dir == DIRECTION.DOWN:
-                            current_key = CHARS[CHAR_LIST[0]]
+                            current_key = alphabet.lines[0][0]  # CHARS[CHAR_LIST[0]]
                             current_phrase = current_phrase[:-2] + '_'
                             cooldown = True
                         # elif last_dir==DIRECTION.SOUTHEAST:

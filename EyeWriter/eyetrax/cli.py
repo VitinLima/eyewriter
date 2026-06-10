@@ -96,4 +96,3 @@ def parse_common_args():
     )
 
     return parser.parse_args()
-

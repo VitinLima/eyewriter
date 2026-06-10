@@ -10,7 +10,15 @@
             "request": "launch",
             "program": "EyeWriter/main.py",
             "console": "integratedTerminal",
-            "args": "main"
+            "args": [
+                "main",
+                "--filter=${input:filter}",
+                "--calibration=${input:calibration}",
+                "--camera=${input:camera}",
+                // "--camera-rotate ${input:camera-rotate}",
+                "--screen=${input:screen}",
+                "--kde-draw-contours=0",
+            ]
         },
         {
             "name": "Test hello",
