@@ -11,6 +11,22 @@ import cv2
 import numpy as np
 import screeninfo
 
+from kivy.app import App
+# from kivy.uix.label import Label
+from kivy.uix.boxlayout import BoxLayout
+# from kivy.uix.widget import Widget
+# from kivy.graphics import Color
+from kivy.graphics import Rectangle
+from kivy.clock import Clock
+from kivy.uix.camera import Camera
+from kivy.core.image import Texture
+import kivy
+
+from kivy.utils import platform
+print(platform)
+if platform != 'linux':
+    from android.permissions import request_permissions, Permission
+
 from Dictionary import (
     Dictionary,
     Entry,
@@ -94,11 +110,11 @@ COLORS = {
 }
 
 
-def run_demo():
+def run_desktop():
     alphabet:Dictionary = load_dictionary_from_json("alphabet.json")
 
     CURRENT_PHRASE_LINE = alphabet.y_start+alphabet.height+0.1
-    threshold_top = 0.9
+    threshold_top = 1.0
     threshold_bot = 0.5
     threshold_sides = 0.7
     # diagonal_threshold = 0.5*pi/4
@@ -445,7 +461,7 @@ def run_demo():
                         elif last_dir == DIRECTION.BLINK:
                             print(f"Selected key: {current_key.key}")
                             current_phrase = current_phrase[:-1] + current_key.key + '_'
-                            current_key = alphabet.lines[0][0]  # CHARS[CHAR_LIST[0]]
+                            current_key = alphabet.lines[0][0]
                             cooldown = True
                         elif last_dir == DIRECTION.UP:
                             if current_key.parent is not None:
@@ -460,7 +476,7 @@ def run_demo():
                                 current_key = current_key.right_child
                                 cooldown = True
                         elif last_dir == DIRECTION.DOWN:
-                            current_key = alphabet.lines[0][0]  # CHARS[CHAR_LIST[0]]
+                            current_key = alphabet.lines[0][0]
                             current_phrase = current_phrase[:-2] + '_'
                             cooldown = True
                         # elif last_dir==DIRECTION.SOUTHEAST:
@@ -501,6 +517,6 @@ def run_demo():
 
 if __name__ == "__main__":
     try:
-        run_demo()
+        run_desktop()
     except Exception:
         print(traceback.format_exc())
