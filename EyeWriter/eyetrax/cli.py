@@ -8,7 +8,7 @@ def parse_common_args():
     parser.add_argument(
         "--filter",
         choices=["kalman", "kalman_ema", "kde", "none"],
-        default="none",
+        default="kde",
         help="Select the filter to apply to gaze estimation",
     )
     parser.add_argument(
@@ -38,7 +38,7 @@ def parse_common_args():
     parser.add_argument(
         "--calibration",
         choices=["9p", "5p", "lissajous", "dense"],
-        default="9p",
+        default="5p",
         help="Calibration method for gaze estimation",
     )
     parser.add_argument(

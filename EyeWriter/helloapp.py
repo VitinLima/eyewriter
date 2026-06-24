@@ -32,8 +32,8 @@ import eyetrax
 # from kivy.uix import camera
 # from eyetrax.utils.screen import get_screen_size
 
-# from Dictionary import Dictionary, Entry, load_dictionary_from_json
-# from utils import draw_background
+from Dictionary import Dictionary, Entry, load_dictionary_from_json
+from utils import draw_background
 
 
 class DrawingCanvas(BoxLayout):
@@ -44,34 +44,43 @@ class DrawingCanvas(BoxLayout):
 
     def __init__(self, **kwargs):
         super(DrawingCanvas, self).__init__(**kwargs)
-        # background = draw_background(self.alphabet,
-        #                              self.width, self.height,
-        #                              font_scale=1.4)
-        # self.alphabet = load_dictionary_from_json("alphabet.json")
-        self.background = np.zeros((self.height, self.width, 3),
-                                   dtype=np.uint8)
-        self.background[:] = (50, 50, 50)
+
+        self.alphabet = load_dictionary_from_json("src/main/assets/alphabet.json")
+
+        self.background = draw_background(self.alphabet,
+                                          1080, int(1080*self.height/self.width),
+                                          font_scale=1.4)
+        # self.background = np.zeros((self.height, self.width, 3),
+        #                            dtype=np.uint8)
+        # self.background[:] = (50, 50, 50)
 
         self.cam = Camera(play=True, resolution=(640, 480))
 
     def update(self, event):
         with self.canvas:
-            img = self.cam
-            frame = img.texture
-            img = np.frombuffer(frame.pixels, np.uint8).reshape(frame.height,
-                                                                frame.width,
-                                                                -1)
-            img = img[:, :, 0:3]
+            img = self.background
+            # img = self.cam
+            # frame = img.texture
+            # img = np.frombuffer(frame.pixels, np.uint8).reshape(frame.height,
+            #                                                     frame.width,
+            #                                                     -1)
+            # img = img[:, :, 0:3]
 
             img = cv2.flip(img, 1)
+            img = cv2.rotate(img, cv2.ROTATE_180)
 
-            camera_rotate = 2
-            if camera_rotate == 1:
-                img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-            elif camera_rotate == 2:
-                img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            # camera_rotate = 2
+            # if camera_rotate == 1:
+            #     img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+            # elif camera_rotate == 2:
+            #     img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
             self.canvas.clear()
+            # texture = Texture.create((img.shape[1], img.shape[0]),
+            #                          colorfmt='rgb')
+            # texture.blit_buffer(img.flatten(),
+            #                     colorfmt='rgb',
+            #                     bufferfmt='ubyte')
             texture = Texture.create((img.shape[1], img.shape[0]),
                                      colorfmt='rgb')
             texture.blit_buffer(img.flatten(),

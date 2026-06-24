@@ -43,7 +43,7 @@ version = 0.1
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
 #requirements = python3,kivy,opencv,mediapipe,numpy=v1.26.4,scikit-learn=v1.8.0,scipy=v1.17.1,screeninfo=v0.8.1,pyvirtualcam=v0.15.0
-requirements = python3,kivy,opencv,screeninfo,scipy
+requirements = python3,kivy,opencv,screeninfo,scipy,scikit-learn==1.8.0,numpy==v1.26.4
 
 
 # (str) Custom source folders for requirements
@@ -59,7 +59,7 @@ requirements = python3,kivy,opencv,screeninfo,scipy
 
 # (list) Supported orientations
 # Valid options are: landscape, portrait, portrait-reverse, landscape-reverse, or all
-orientation = portrait
+orientation = landscape
 
 # (list) List of services to declare
 # This is currently only relevant to Android services.
@@ -200,7 +200,7 @@ android.permissions = android.permission.CAMERA
 # Either form may be used, and assets need not be in 'source.include_exts'.
 # 1) android.add_assets = source_asset_relative_path
 # 2) android.add_assets = source_asset_path:destination_asset_relative_path
-#android.add_assets =
+android.add_assets = assets/alphabet.json:alphabet.json, assets/dictionary.json:dictionary.json, assets/numbers.json:numbers.json
 
 # (list) Put these files or directories in the apk res directory.
 # The option may be used in three ways, the value may contain one or zero ':'

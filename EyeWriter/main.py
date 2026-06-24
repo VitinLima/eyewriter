@@ -3,30 +3,34 @@ import traceback
 
 from kivy.utils import platform
 
-from mainandroid import run_android
-from maindesktop import run_desktop
-from helloapp import HelloApp
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1 or sys.argv[1] == "hello":
-        print("Running hello world application")
-        sys.argv.pop(1)
-        try:
+    try:
+        if len(sys.argv) == 1:
+            print("Running default application")
+            # from helloapp import HelloApp
+            # HelloApp().run()
+            from mainandroid import run_android
+            run_android()
+
+        elif sys.argv[1] == "hello":
+            sys.argv.pop(1)
+            print("Running hello world application")
+
+            from helloapp import HelloApp
             HelloApp().run()
-        except Exception:
-            print(traceback.format_exc())
-    elif sys.argv[1] == "main":
-        sys.argv.pop(1)
-        if platform == 'linux':
-            try:
+
+        elif sys.argv[1] == "main":
+            sys.argv.pop(1)
+            from mainandroid import run_android
+            from maindesktop import run_desktop
+
+            if platform == 'linux':
                 print("Running main application on desktop")
-                # run_desktop()
-                run_android()
-            except Exception:
-                print(traceback.format_exc())
-        elif platform == 'android':
-            try:
+                run_android()  # run_desktop()
+
+            elif platform == 'android':
                 print("Running main application on android")
                 run_android()
-            except Exception:
-                print(traceback.format_exc())
+    except Exception:
+        print(traceback.format_exc())

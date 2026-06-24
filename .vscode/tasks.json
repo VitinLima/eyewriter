@@ -43,12 +43,40 @@
             },
             "problemMatcher": []
         },
+        // {
+        //     "label": "debug deploy run logcat",
+        //     "type": "shell",
+        //     "command": "",
+        //     "args": [
+
+        //     ],
+        //     "options": {
+        //         "env": {
+                    
+        //         }
+        //     },
+        //     "problemMatcher": [],
+        //     "dependsOn": [
+        //         "debug",
+        //         "press-key-to-continue",
+        //         "deploy run logcat"],
+        //     "dependsOrder": "sequence"
+        // },
         {
             "label": "debug deploy run logcat",
             "type": "shell",
-            "command": "",
+            "command": "bash",//
             "args": [
-
+                "-c",
+                "script=\"tmpscript.sh\" ; echo \"\" >$script ; for a in \"$@\"; do echo $a >> \"$script\" ; done ; bash \"$script\" ; rm \"$script\"",
+                "--",
+                "source ./venv/bin/activate",
+                "cd EyeWriter/",
+                "( rm ./buildlog.txt || true) && buildozer android debug | tee ./buildlog.txt",
+                "if [ ${input:should-wait} -eq 1 ] ; then",
+                "  echo \"Press Enter to continue...\" ; read",
+                "fi",
+                "source ./venv/bin/activate ; cd EyeWriter/ ; buildozer android deploy run logcat | grep \"python\"",
             ],
             "options": {
                 "env": {
@@ -56,8 +84,15 @@
                 }
             },
             "problemMatcher": [],
-            "dependsOn": ["debug", "press-key-to-continue", "deploy run logcat"],
-            "dependsOrder": "sequence"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "should-wait",
+            "description": "Ask input to continue",
+            "type": "pickString",
+            "options": ["0", "1"],
+            "default": "0"
         }
     ]
 }

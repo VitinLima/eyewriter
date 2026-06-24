@@ -3,6 +3,7 @@ import time
 import cv2
 import numpy as np
 import screeninfo
+from enum import StrEnum, auto
 
 
 def compute_grid_points(order, sw: int, sh: int, margin_ratio: float = 0.10):
@@ -57,131 +58,159 @@ def compute_grid_points_from_shape(
     return compute_grid_points(indices, sw, sh, margin_ratio)
 
 
-def wait_for_face_and_countdown(cap, gaze_estimator, sw, sh, dur: int = 2, screen_index: int = 0, camera_rotate: int = 0) -> bool:
+class STATE(StrEnum):
+    PREPARING = auto()
+    PULSING = auto()
+    CAPTURING = auto()
+
+_state = None
+_pts = None
+_pts_idx = None
+_ps = None
+_pulse_d = None
+_cs = None
+_cd_d = None
+_countdown_start = None
+_countdown = False
+_background = None
+_final_radius = None
+_feats, _targs = None, None
+
+
+def wait_for_face_and_countdown(gaze_estimator, frame, dur: int = 2):
     """
     Waits for a face to be detected (not blinking), then shows a countdown ellipse
     """
-    cv2.namedWindow("Calibration")
-    fd_start = None
-    countdown = False
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            continue
+    global _countdown_start, _countdown
 
-        if camera_rotate == 1:
-            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-        elif camera_rotate == 2:
-            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-        cv2.imshow("thumbnail", frame)
-        f, blink = gaze_estimator.extract_features(frame)
-        face = f is not None and not blink
-        canvas = np.zeros((sh, sw, 3), dtype=np.uint8)
-        now = time.time()
-        if face:
-            if not countdown:
-                fd_start = now
-                countdown = True
-            elapsed = now - fd_start
-            if elapsed >= dur:
-                return True
-            t = elapsed / dur
-            e = t * t * (3 - 2 * t)
-            ang = 360 * (1 - e)
-            cv2.ellipse(
-                canvas,
-                (sw // 2, sh // 2),
-                (50, 50),
-                0,
-                -90,
-                -90 + ang,
-                (0, 255, 0),
-                -1,
-            )
-        else:
-            countdown = False
-            fd_start = None
-            txt = "Face not detected"
-            fs = 2
-            thick = 3
-            size, _ = cv2.getTextSize(txt, cv2.FONT_HERSHEY_SIMPLEX, fs, thick)
-            tx = (sw - size[0]) // 2
-            ty = (sh + size[1]) // 2
-            cv2.putText(
-                canvas, txt, (tx, ty), cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 0, 255), thick
-            )
-        screen = screeninfo.get_monitors()[screen_index]
-        cv2.moveWindow("Calibration", screen.x-1, screen.y-1)
-        cv2.setWindowProperty("Calibration", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-        cv2.imshow("Calibration", canvas)
-        if cv2.waitKey(1) == 27:
-            return False
+    canvas = _background.copy()
+    sw = canvas.shape[1]
+    sh = canvas.shape[0]
 
+    f, blink = gaze_estimator.extract_features(frame)
+    face = f is not None and not blink
+    now = time.time()
+    if face:
+        if not _countdown:
+            _countdown_start = now
+            _countdown = True
+        elapsed = now - _countdown_start
+        if elapsed >= dur:
+            return True, canvas
+        t = elapsed / dur
+        e = t * t * (3 - 2 * t)
+        ang = 360 * (1 - e)
+        cv2.ellipse(
+            canvas,
+            (sw // 2, sh // 2),
+            (50, 50),
+            0,
+            -90,
+            -90 + ang,
+            (0, 255, 0),
+            -1,
+        )
+    else:
+        _countdown = False
+        _countdown_start = None
+        txt = "Face not detected"
+        fs = 2
+        thick = 3
+        size, _ = cv2.getTextSize(txt, cv2.FONT_HERSHEY_SIMPLEX, fs, thick)
+        tx = (sw - size[0]) // 2
+        ty = (sh + size[1]) // 2
+        cv2.putText(
+            canvas, txt, (tx, ty), cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 0, 255), thick
+        )
+    return False, canvas
 
-def _pulse_and_capture(
-    gaze_estimator,
-    cap,
-    pts,
-    sw: int,
-    sh: int,
-    pulse_d: float = 1.0,
-    cd_d: float = 1.0,
-    screen_index: int = 0,
-    camera_rotate: int = 0,
-):
+def _pulse(x, y):
+    e = time.time() - _ps
+    if e > _pulse_d:
+        return True, None
+
+    canvas = _background.copy()
+    radius = 15 + int(15 * abs(np.sin(2 * np.pi * e)))
+    _final_radius = radius
+    cv2.circle(canvas, (x, y), radius, (0, 255, 0), -1)
+
+    return False, canvas
+
+def _capture(x, y):
+    e = time.time() - _cs
+    if e > _cd_d:
+        return True, None
+
+    canvas = _background.copy()
+    cv2.circle(canvas, (x, y), _final_radius, (0, 255, 0), -1)
+    t = e / _cd_d
+    ease = t * t * (3 - 2 * t)
+    ang = 360 * (1 - ease)
+    cv2.ellipse(canvas, (x, y), (40, 40), 0, -90, -90 + ang, (255, 255, 255), 4)
+
+    return False, canvas
+
+def _pulse_and_capture(gaze_estimator,
+                       frame):
     """
     Shared pulse-and-capture loop for each calibration point
     """
-    feats, targs = [], []
+    global _state, _ps, _cs, _pts_idx
 
-    for x, y in pts:
-        # pulse
-        ps = time.time()
-        final_radius = 20
-        while True:
-            e = time.time() - ps
-            if e > pulse_d:
-                break
-            ok, frame = cap.read()
-            if not ok:
-                continue
-            if camera_rotate == 1:
-                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-            elif camera_rotate == 2:
-                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-            cv2.imshow("thumbnail", frame)
-            canvas = np.zeros((sh, sw, 3), dtype=np.uint8)
-            radius = 15 + int(15 * abs(np.sin(2 * np.pi * e)))
-            final_radius = radius
-            cv2.circle(canvas, (x, y), radius, (0, 255, 0), -1)
-            cv2.imshow("Calibration", canvas)
-            if cv2.waitKey(1) == 27:
-                return None
-        # capture
-        cs = time.time()
-        while True:
-            e = time.time() - cs
-            if e > cd_d:
-                break
-            ok, frame = cap.read()
-            if not ok:
-                continue
-            if camera_rotate == 1:
-                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-            elif camera_rotate == 2:
-                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-            canvas = np.zeros((sh, sw, 3), dtype=np.uint8)
-            cv2.circle(canvas, (x, y), final_radius, (0, 255, 0), -1)
-            t = e / cd_d
-            ease = t * t * (3 - 2 * t)
-            ang = 360 * (1 - ease)
-            cv2.ellipse(canvas, (x, y), (40, 40), 0, -90, -90 + ang, (255, 255, 255), 4)
-            cv2.imshow("Calibration", canvas)
-            if cv2.waitKey(1) == 27:
-                return None
-            ft, blink = gaze_estimator.extract_features(frame)
-            if ft is not None and not blink:
-                feats.append(ft)
-                targs.append([x, y])
+    x, y = _pts[_pts_idx]
 
-    return feats, targs
+    if _state == STATE.PREPARING:
+        ok, canvas = wait_for_face_and_countdown(gaze_estimator, frame)
+        if ok:
+            _ps = time.time()
+            _state = STATE.PULSING
+            ok, canvas = _pulse(x, y)
+    elif _state == STATE.PULSING:
+        ok, canvas = _pulse(x, y)
+        if ok:
+            _cs = time.time()
+            _state = STATE.CAPTURING
+            ok, canvas = _capture(x, y)
+    elif _state == STATE.CAPTURING:
+        ok, canvas = _capture(x, y)
+        print("Extracting features")
+        ft, blink = gaze_estimator.extract_features(frame)
+        if ft is not None and not blink:
+            print("Point added")
+            _feats.append(ft)
+            _targs.append([x, y])
+        if ok:
+            _pts_idx += 1
+            _ps = time.time()
+            _state = STATE.PULSING
+            if _pts_idx == len(_pts):
+                print(f"Training with {len(_feats)} points")
+                gaze_estimator.train(np.array(_feats), np.array(_targs))
+                return True, _background
+            else:
+                x, y = _pts[_pts_idx]
+                ok, canvas = _pulse(x, y)
+
+    # capture
+
+    return False, canvas
+
+def _prepare_pulse_and_capture(pts,
+                               screen_width: int,
+                               screen_height: int,
+                               pulse_d: float = 1.0,
+                               cd_d: float = 1.0):
+    global _state, _pts, _pts_idx, _ps, _pulse_d, _cd_d, _background, _final_radius, _feats, _targs, _countdown
+    _state = STATE.PREPARING
+    _pts = pts
+    _pts_idx = 0
+    _pulse_d = pulse_d
+    _cd_d = cd_d
+    _background = np.zeros((screen_height, screen_width, 3), dtype=np.uint8)
+    _final_radius = 20
+    _feats, _targs = [], []
+    _countdown = False
+    _ps = time.time()
+    x, y = _pts[0]
+    _, canvas = _pulse(x, y)
+    return canvas
