@@ -4,7 +4,7 @@
         {
             "label": "debug",
             "type": "shell",
-            "command": "source ./venv/bin/activate ; cd EyeWriter/ ; ( rm ./buildlog.txt || true) && buildozer android debug | tee ./buildlog.txt",
+            "command": "source ./.venv/bin/activate ; cd EyeWriter/ ; ( rm ./buildlog.txt || true) && buildozer android debug | tee ./buildlog.txt",
             "args": [
 
             ],
@@ -18,7 +18,7 @@
         {
             "label": "deploy run logcat",
             "type": "shell",
-            "command": "source ./venv/bin/activate ; cd EyeWriter/ ; buildozer android deploy run logcat | grep \"python\"",
+            "command": "source ./.venv/bin/activate ; cd EyeWriter/ ; buildozer android deploy run logcat | grep \"python\"",
             "args": [
 
             ],

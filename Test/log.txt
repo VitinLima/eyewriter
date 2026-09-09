@@ -1,0 +1,123 @@
+# Ensure build layout
+# Check configuration tokens
+# Preparing build
+# Check requirements for android
+# Search for Git (git)
+#  -> found at /usr/bin/git
+# Search for Cython (cython)
+#  -> found at /home/vitinho/Workbench/eyewriter/.venv/bin/cython
+# Search for Java compiler (javac)
+#  -> found at /usr/bin/javac
+# Search for Java keytool (keytool)
+#  -> found at /usr/bin/keytool
+# Install platform
+# Run 'git config --get remote.origin.url' ...
+# Cwd /home/vitinho/Workbench/eyewriter/Test/.buildozer/android/platform/python-for-android
+https://github.com/kivy/python-for-android.git
+# Run 'git branch -vv' ...
+# Cwd /home/vitinho/Workbench/eyewriter/Test/.buildozer/android/platform/python-for-android
+* master 58d21141 [origin/master] Merge pull request #3321 from kivy/release-2026.05.09
+# Run '/home/vitinho/Workbench/eyewriter/.venv/bin/python3 -m pip install -q appdirs colorama>=0.3.3 jinja2 sh>=2, <3.0; sys_platform!="win32" meson ninja build toml packaging setuptools wheel~=0.43.0' ...
+# Cwd None
+# Apache ANT found at /home/vitinho/.buildozer/android/platform/apache-ant-1.9.4
+# Android SDK found at /home/vitinho/.buildozer/android/platform/android-sdk
+# Recommended android's NDK version by p4a is: 28c
+# Android NDK found at /home/vitinho/.buildozer/android/platform/android-ndk-r28c
+# Run '/home/vitinho/Workbench/eyewriter/.venv/bin/python3 -m pythonforandroid.toolchain aab -h --color=always --storage-dir=/home/vitinho/Workbench/eyewriter/Test/.buildozer/android/platform/build-arm64-v8a_armeabi-v7a --ndk-api=24 --ignore-setup-py --debug' ...
+# Cwd /home/vitinho/Workbench/eyewriter/Test/.buildozer/android/platform/python-for-android
+# Check application requirements
+# Compile platform
+# Run '/home/vitinho/Workbench/eyewriter/.venv/bin/python3 -m pythonforandroid.toolchain create --dist_name=myapp --bootstrap=sdl2 --requirements=python3==3.12.3,hostpython3==3.12.3,kivy --arch=arm64-v8a --arch=armeabi-v7a --copy-libs --color=always --storage-dir=/home/vitinho/Workbench/eyewriter/Test/.buildozer/android/platform/build-arm64-v8a_armeabi-v7a --ndk-api=24 --ignore-setup-py --debug' ...
+# Cwd /home/vitinho/Workbench/eyewriter/Test/.buildozer/android/platform/python-for-android
+# Command failed: ('/home/vitinho/Workbench/eyewriter/.venv/bin/python3', '-m', 'pythonforandroid.toolchain', 'create', '--dist_name=myapp', '--bootstrap=sdl2', '--requirements=python3==3.12.3,hostpython3==3.12.3,kivy', '--arch=arm64-v8a', '--arch=armeabi-v7a', '--copy-libs', '--color=always', '--storage-dir=/home/vitinho/Workbench/eyewriter/Test/.buildozer/android/platform/build-arm64-v8a_armeabi-v7a', '--ndk-api=24', '--ignore-setup-py', '--debug')
+# Error code: 1
+# ENVIRONMENT:
+#     SHELL = '/bin/bash'
+#     SESSION_MANAGER = 'local/tuxedo:@/tmp/.ICE-unix/2134,unix/tuxedo:/tmp/.ICE-unix/2134'
+#     WINDOWID = '97309487442528'
+#     QT_ACCESSIBILITY = '1'
+#     COLORTERM = 'truecolor'
+#     XDG_CONFIG_DIRS = '/home/vitinho/.config/kdedefaults:/etc/xdg'
+#     XDG_SESSION_PATH = '/org/freedesktop/DisplayManager/Session0'
+#     XDG_MENU_PREFIX = 'plasma-'
+#     ICEAUTHORITY = '/run/user/1000/iceauth_fWmYgg'
+#     LANGUAGE = ''
+#     LC_ADDRESS = 'fr_FR.UTF-8'
+#     LC_NAME = 'fr_FR.UTF-8'
+#     SSH_AUTH_SOCK = '/run/user/1000/gnupg/S.gpg-agent.ssh'
+#     SHELL_SESSION_ID = 'a69a6c24bab0409896fd906d6cccfc03'
+#     MEMORY_PRESSURE_WRITE = 'c29tZSAyMDAwMDAgMjAwMDAwMAA='
+#     DESKTOP_SESSION = 'plasma'
+#     LC_MONETARY = 'fr_FR.UTF-8'
+#     GTK_RC_FILES = '/etc/gtk/gtkrc:/home/vitinho/.gtkrc:/home/vitinho/.config/gtkrc'
+#     XDG_SEAT = 'seat0'
+#     PWD = '/home/vitinho/Workbench/eyewriter/Test'
+#     XDG_SESSION_DESKTOP = 'KDE'
+#     LOGNAME = 'vitinho'
+#     XDG_SESSION_TYPE = 'wayland'
+#     SYSTEMD_EXEC_PID = '2171'
+#     XAUTHORITY = '/run/user/1000/xauth_SXbxwJ'
+#     XKB_DEFAULT_MODEL = 'pc105'
+#     GTK2_RC_FILES = '/etc/gtk-2.0/gtkrc:/home/vitinho/.gtkrc-2.0:/home/vitinho/.config/gtkrc-2.0'
+#     HOME = '/home/vitinho'
+#     LC_PAPER = 'fr_FR.UTF-8'
+#     LANG = 'en_US.UTF-8'
+#     _JAVA_AWT_WM_NONREPARENTING = '1'
+#     LS_COLORS = 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=00:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.avif=01;35:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:*~=00;90:*#=00;90:*.bak=00;90:*.crdownload=00;90:*.dpkg-dist=00;90:*.dpkg-new=00;90:*.dpkg-old=00;90:*.dpkg-tmp=00;90:*.old=00;90:*.orig=00;90:*.part=00;90:*.rej=00;90:*.rpmnew=00;90:*.rpmorig=00;90:*.rpmsave=00;90:*.swp=00;90:*.tmp=00;90:*.ucf-dist=00;90:*.ucf-new=00;90:*.ucf-old=00;90:'
+#     XDG_CURRENT_DESKTOP = 'KDE'
+#     KONSOLE_DBUS_SERVICE = ':1.196'
+#     VIRTUAL_ENV = '/home/vitinho/Workbench/eyewriter/.venv'
+#     MEMORY_PRESSURE_WATCH = '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/session.slice/plasma-plasmashell.service/memory.pressure'
+#     WAYLAND_DISPLAY = 'wayland-0'
+#     KONSOLE_DBUS_SESSION = '/Sessions/1'
+#     PROFILEHOME = ''
+#     XDG_SEAT_PATH = '/org/freedesktop/DisplayManager/Seat0'
+#     INVOCATION_ID = '4a9851fb0936442da4a49cde127655cd'
+#     KONSOLE_VERSION = '251203'
+#     MANAGERPID = '1646'
+#     KDE_SESSION_UID = '1000'
+#     XKB_DEFAULT_LAYOUT = 'br'
+#     LESSCLOSE = '/usr/bin/lesspipe %s %s'
+#     XDG_SESSION_CLASS = 'user'
+#     TERM = 'xterm-256color'
+#     LC_IDENTIFICATION = 'fr_FR.UTF-8'
+#     KONSOLE_DBUS_ACTIVATION_COOKIE = 'lP5lXlHz4ROFu0xQbM/ANEMyhv3q6X6CYbAigHF9dWQ='
+#     LESSOPEN = '| /usr/bin/lesspipe %s'
+#     USER = 'vitinho'
+#     COLORFGBG = '15;0'
+#     QT_WAYLAND_RECONNECT = '1'
+#     KDE_SESSION_VERSION = '6'
+#     DISPLAY = ':0'
+#     SHLVL = '1'
+#     GSM_SKIP_SSH_AGENT_WORKAROUND = 'true'
+#     LC_TELEPHONE = 'fr_FR.UTF-8'
+#     SYSTEMD_PAGER = 'less'
+#     LC_MEASUREMENT = 'fr_FR.UTF-8'
+#     XDG_VTNR = '1'
+#     XDG_SESSION_ID = '1'
+#     VIRTUAL_ENV_PROMPT = '(.venv) '
+#     XDG_RUNTIME_DIR = '/run/user/1000'
+#     PS1 = ('(.venv) \\[\\e]0;\\u@\\h: '
+ '\\w\\a\\]${debian_chroot:+($debian_chroot)}\\[\\033[01;32m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ ')
+#     LC_TIME = 'fr_FR.UTF-8'
+#     JOURNAL_STREAM = '10:23491'
+#     GCC_COLORS = 'error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+#     XDG_DATA_DIRS = '/home/vitinho/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share'
+#     KDE_FULL_SESSION = 'true'
+#     PATH = '/home/vitinho/.buildozer/android/platform/apache-ant-1.9.4/bin:/home/vitinho/Workbench/eyewriter/.venv/bin:/home/vitinho/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'
+#     DBUS_SESSION_BUS_ADDRESS = 'unix:path=/run/user/1000/bus'
+#     KDE_APPLICATIONS_AS_SCOPE = '1'
+#     LC_NUMERIC = 'fr_FR.UTF-8'
+#     KONSOLE_DBUS_WINDOW = '/Windows/1'
+#     _ = '/home/vitinho/Workbench/eyewriter/.venv/bin/buildozer'
+#     PACKAGES_PATH = '/home/vitinho/.buildozer/android/packages'
+#     ANDROIDSDK = '/home/vitinho/.buildozer/android/platform/android-sdk'
+#     ANDROIDNDK = '/home/vitinho/.buildozer/android/platform/android-ndk-r28c'
+#     ANDROIDAPI = '33'
+#     ANDROIDMINAPI = '24'
+# 
+# Buildozer failed to execute the last command
+# The error might be hidden in the log above this error
+# Please read the full log, and search for it before
+# raising an issue with buildozer itself.
+# In case of a bug report, please add a full log with log_level = 2

@@ -6,13 +6,13 @@
 [app]
 
 # (str) Title of your application
-title = Eye Writer
+title = My Application
 
 # (str) Package name
-package.name = eyewriter
+package.name = myapp
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = opensource.org.test
+package.domain = org.test
 
 # (str) Source code where the main.py live
 source.dir = .
@@ -42,16 +42,12 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,opencv,mediapipe,numpy,scikit-learn==v1.8.0,scipy,screeninfo==v0.8.1,pyvirtualcam==v0.15.0
-#requirements = python3,kivy,opencv,screeninfo,scipy
-#requirements = python3==3.12.3,hostpython3==3.12.3,kivy
-# requirements = python3,kivy
-
+# requirements = python3==3.12.3,hostpython3==3.12.3,kivy
+requirements = python3,kivy,scipy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
 # requirements.source.kivy = ../../kivy
-# requirements.source.customeyetrax = ./eyetrax_pyproject_recipe
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
@@ -109,12 +105,9 @@ fullscreen = 0
 # (list) Permissions
 # (See https://python-for-android.readthedocs.io/en/latest/buildoptions.html for all the supported syntaxes and properties)
 #android.permissions = android.permission.INTERNET, (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
-android.permissions = android.permission.CAMERA
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
-#android.features = android.hardware.camera, android.hardware.camera.autofocus, android.hardware.camera.front, android.hardware.camera.front.autofocus
-#;required=false), (name=android.hardware.camera.autofocus;required=false), (name=android.hardware.camera.front;required=false), (name=android.hardware.camera.front.autofocus;required=false)
 
 # (int) Target Android API, should be as high as possible.
 #android.api = 33
@@ -126,7 +119,8 @@ android.permissions = android.permission.CAMERA
 #android.sdk = 20
 
 # (str) Android NDK version to use
-#android.ndk = 23b
+android.ndk = 25b
+#android.ndk = 21e
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
 #android.ndk_api = 21
@@ -228,12 +222,12 @@ android.permissions = android.permission.CAMERA
 # this can for example be necessary when importing certain java libraries using the 'android.gradle_dependencies' option
 # see https://developer.android.com/studio/write/java8-support for further information
 # android.add_compile_options = "sourceCompatibility = 1.8", "targetCompatibility = 1.8"
-android.add_compile_options = "-Xmx2048M"
 
 # (list) Gradle repositories to add {can be necessary for some android.gradle_dependencies}
 # please enclose in double quotes 
 # e.g. android.gradle_repositories = "maven { url 'https://repo.spring.io/release' }"
 #android.add_gradle_repositories =
+
 # (list) packaging options to add
 # see https://developer.android.com/reference/tools/gradle-api/7.1/com/android/build/api/dsl/PackagingOptions
 # can be necessary to solve conflicts in gradle_dependencies
@@ -299,7 +293,6 @@ android.add_compile_options = "-Xmx2048M"
 
 # (list) The Android archs to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
 # In past, was `android.arch` as we weren't supporting builds for multiple archs at the same time.
-#android.archs = arm64-v8a, armeabi-v7a
 android.archs = armeabi-v7a
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
@@ -344,7 +337,9 @@ android.allow_backup = True
 #p4a.fork = kivy
 
 # (str) python-for-android branch to use, defaults to master
+#p4a.branch = v2026.05.09
 p4a.branch = v2024.01.21
+#p4a.branch = master
 
 # (str) python-for-android specific commit to use, defaults to HEAD, must be within p4a.branch
 #p4a.commit = 5b2a4bad793ba20f3016c41f58a1d59d989514a6
@@ -353,7 +348,7 @@ p4a.branch = v2024.01.21
 #p4a.source_dir =
 
 # (str) The directory in which python-for-android should look for your own build recipes (if any)
-p4a.local_recipes = ../Recipes
+#p4a.local_recipes =
 
 # (str) Filename to the hook for p4a
 #p4a.hook =
