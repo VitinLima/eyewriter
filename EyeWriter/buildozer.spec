@@ -43,7 +43,7 @@ version = 0.1
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
 #requirements = python3,kivy,opencv,mediapipe,numpy=v1.26.4,scikit-learn=v1.8.0,scipy=v1.17.1,screeninfo=v0.8.1,pyvirtualcam=v0.15.0
-requirements = python3,kivy,opencv,screeninfo,scipy,scikit-learn==1.8.0,numpy==v1.26.4
+requirements = python3,kivy,opencv,screeninfo,eyetrax,scipy,scikit-learn
 
 
 # (str) Custom source folders for requirements

@@ -27,16 +27,18 @@ def load_dictionary_from_json(fname):
     
     N = 1
     n = 0
-    current_line_y = 0.2
+    current_line_y = 0.1
     line_x_spacing = 0.1
     line_y_spacing = 0.09
     
-    letter = Entry(CHAR_LIST[0], x=0.5, y=0.1)
+    letter = Entry(CHAR_LIST[0], x=0.5, y=current_line_y)
+    letter.parent = letter
     new_dictionary = Dictionary()
     new_dictionary.entries[letter.key] = letter
     new_dictionary.lines = [[letter]]
     new_dictionary.y_start = current_line_y
     new_dictionary.height = current_line_y + line_y_spacing
+    current_line_y += line_y_spacing
     
     new_line = []
     for k, c in zip(KEY_LIST[1:],CHAR_LIST[1:]):
@@ -68,15 +70,15 @@ def load_dictionary_from_json(fname):
     parent = new_dictionary.lines[-1][n]
     if parent.left_child is None:
         x = parent.x - line_x_spacing/N
-        letter = Entry(entry=' ', key='SPACE', parent=parent, x=x, y=current_line_y)
+        letter = Entry(entry='SPACE', key=' ', parent=parent, x=x, y=current_line_y)
         parent.left_child = letter
     else:
         x = parent.x + line_x_spacing/N
-        letter = Entry(entry=' ', key='SPACE', parent=parent, x=x, y=current_line_y)
+        letter = Entry(entry='SPACE', key=' ', parent=parent, x=x, y=current_line_y)
         parent.right_child = letter
         n += 1
+    new_dictionary.entries[letter.entry] = letter
     new_line.append(letter)
     new_dictionary.lines.append(new_line)
-    new_dictionary.height += line_y_spacing
     
     return new_dictionary

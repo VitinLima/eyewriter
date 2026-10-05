@@ -148,12 +148,13 @@ class DrawingCanvas(BoxLayout):
 
         self.alphabet = load_dictionary_from_json("src/main/assets/alphabet.json")
         self.background = draw_background(self.alphabet,
-                                          1080, int(1080*self.height/self.width),
+                                          self.width, self.height,
                                           font_scale=1)
         self.update_canvas(self.background)
         self.cam = Camera(play=True, resolution=(self.cam_width, self.cam_height))
 
-        self.CURRENT_PHRASE_LINE = self.alphabet.y_start+self.alphabet.height+0.1
+        self.CURRENT_PHRASE_LINE = self.alphabet.y_start+self.alphabet.height
+        print(f"str: {self.CURRENT_PHRASE_LINE} ... y_str:{self.alphabet.y_start} ... h:{self.alphabet.height}")
         self.current_key:Entry = self.alphabet.lines[0][0]
         self.t0 = time.time()
 
@@ -276,6 +277,7 @@ class DrawingCanvas(BoxLayout):
         return dir
 
     def paint_canvas(self, x_pred, y_pred, dir, blink_detected, cursor_alpha, fps):
+        #print(f"width: {self.width}   height: {self.height}")
         canvas = self.background.copy()
         if x_pred is not None and y_pred is not None and cursor_alpha > 0:
             x_pred -= self.offsetx
@@ -411,6 +413,12 @@ class DrawingCanvas(BoxLayout):
         #     self.smoother = NoSmoother()
 
     def update(self, event):
+        print(f"Background shape: {self.background.shape} ... width:{self.width} ... heigth:{self.height}")
+        if self.background.shape[1] != self.width or self.background.shape[0] != self.height:
+            print("Redrawing background")
+            self.background = draw_background(self.alphabet,
+                                          self.width, self.height,
+                                          font_scale=1)
         if self.state == self.APPSTATE.PREPARING_CALIBRATION:
             canvas = self.prepare_calibration()
             self.update_canvas(canvas)
@@ -421,7 +429,7 @@ class DrawingCanvas(BoxLayout):
         frame = self.get_frame()
         if self.state == self.APPSTATE.CALIBRATING:
             ok, canvas = self.run_calibration(frame)
-            self.update_canvas(canvas)
+            self.update_canvas(canvas, frame)
             if ok:
                 self.state = self.APPSTATE.RUNNING
                 self.t0 = time.time()
@@ -479,25 +487,25 @@ class DrawingCanvas(BoxLayout):
                     cooldown = False
                 elif self.last_dir == DIRECTION.BLINK:
                     print(f"Selected key: {self.current_key.key}")
-                    current_phrase = self.current_phrase[:-1] + self.current_key.key + '_'
-                    current_key = self.alphabet.lines[0][0]
-                    cooldown = True
+                    self.current_phrase = self.current_phrase[:-1] + self.current_key.key + '_'
+                    self.current_key = self.alphabet.lines[0][0]
+                    self.cooldown = True
                 elif self.last_dir == DIRECTION.UP:
-                    if current_key.parent is not None:
-                        current_key = current_key.parent
-                        cooldown = True
+                    if self.current_key.parent is not None:
+                        self.current_key = self.current_key.parent
+                        self.cooldown = True
                 elif self.last_dir == DIRECTION.LEFT:
-                    if current_key.left_child is not None:
-                        current_key = current_key.left_child
-                        cooldown = True
+                    if self.current_key.left_child is not None:
+                        self.current_key = self.current_key.left_child
+                        self.cooldown = True
                 elif self.last_dir == DIRECTION.RIGHT:
-                    if current_key.right_child is not None:
-                        current_key = current_key.right_child
-                        cooldown = True
+                    if self.current_key.right_child is not None:
+                        self.current_key = self.current_key.right_child
+                        self.cooldown = True
                 elif self.last_dir == DIRECTION.DOWN:
-                    current_key = self.alphabet.lines[0][0]
-                    current_phrase = current_phrase[:-2] + '_'
-                    cooldown = True
+                    self.current_key = self.alphabet.lines[0][0]
+                    self.current_phrase = self.current_phrase[:-2] + '_'
+                    self.cooldown = True
                 # elif last_dir==DIRECTION.SOUTHEAST:
                 #     tts = gTTS(text=current_phrase, lang='pt-br')
                 #     mp3_as_bytes = next(tts.stream())
@@ -505,7 +513,7 @@ class DrawingCanvas(BoxLayout):
                 #     play(audio)
                 # elif last_dir==DIRECTION.SOUTHWEST:
                 #     current_phrase = '_'
-        last_dir = dir
+        self.last_dir = dir
         Clock.schedule_once(self.update, 0.033)
 
         # keyboard_pressed = cv2.waitKey(1)

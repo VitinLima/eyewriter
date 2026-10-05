@@ -1,84 +1,301 @@
+diff --git a/src/eyetrax/calibration/__init__.py b/src/eyetrax/calibration/__init__.py
+index 8bbeff0..04c8e1a 100644
+--- a/src/eyetrax/calibration/__init__.py
++++ b/src/eyetrax/calibration/__init__.py
+@@ -4,7 +4,7 @@ from .common import (
+     wait_for_face_and_countdown,
+ )
+ from .dense_grid import run_dense_grid_calibration
+-from .five_point import run_5_point_calibration
++from .five_point import (prepare_5_point_calibration, run_5_point_calibration)
+ from .lissajous import run_lissajous_calibration
+ from .nine_point import run_9_point_calibration
+ 
+@@ -13,7 +13,7 @@ __all__ = [
+     "compute_grid_points",
+     "compute_grid_points_from_shape",
+     "run_9_point_calibration",
+-    "run_5_point_calibration",
++    "prepare_5_point_calibration","run_5_point_calibration",
+     "run_dense_grid_calibration",
+     "run_lissajous_calibration",
+ ]
 diff --git a/src/eyetrax/calibration/common.py b/src/eyetrax/calibration/common.py
-index 7ea01eb..23f9c41 100644
+index 7ea01eb..717b0ec 100644
 --- a/src/eyetrax/calibration/common.py
 +++ b/src/eyetrax/calibration/common.py
-@@ -2,6 +2,7 @@ import time
+@@ -2,6 +2,8 @@ import time
  
  import cv2
  import numpy as np
 +import screeninfo
++from enum import StrEnum, auto
  
  
  def compute_grid_points(order, sw: int, sh: int, margin_ratio: float = 0.10):
-@@ -56,18 +57,23 @@ def compute_grid_points_from_shape(
+@@ -56,112 +58,159 @@ def compute_grid_points_from_shape(
      return compute_grid_points(indices, sw, sh, margin_ratio)
  
  
 -def wait_for_face_and_countdown(cap, gaze_estimator, sw, sh, dur: int = 2) -> bool:
-+def wait_for_face_and_countdown(cap, gaze_estimator, sw, sh, dur: int = 2, screen_index: int = 0, camera_rotate: int = 0) -> bool:
++class STATE(StrEnum):
++    PREPARING = auto()
++    PULSING = auto()
++    CAPTURING = auto()
++
++_state = None
++_pts = None
++_pts_idx = None
++_ps = None
++_pulse_d = None
++_cs = None
++_cd_d = None
++_countdown_start = None
++_countdown = False
++_background = None
++_final_radius = None
++_feats, _targs = None, None
++
++
++def wait_for_face_and_countdown(gaze_estimator, frame, dur: int = 2):
      """
      Waits for a face to be detected (not blinking), then shows a countdown ellipse
      """
 -    cv2.namedWindow("Calibration", cv2.WND_PROP_FULLSCREEN)
 -    cv2.setWindowProperty("Calibration", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-+    cv2.namedWindow("Calibration")
-     fd_start = None
-     countdown = False
-     while True:
-         ret, frame = cap.read()
-         if not ret:
-             continue
+-    fd_start = None
+-    countdown = False
+-    while True:
+-        ret, frame = cap.read()
+-        if not ret:
+-            continue
+-        f, blink = gaze_estimator.extract_features(frame)
+-        face = f is not None and not blink
+-        canvas = np.zeros((sh, sw, 3), dtype=np.uint8)
+-        now = time.time()
+-        if face:
+-            if not countdown:
+-                fd_start = now
+-                countdown = True
+-            elapsed = now - fd_start
+-            if elapsed >= dur:
+-                return True
+-            t = elapsed / dur
+-            e = t * t * (3 - 2 * t)
+-            ang = 360 * (1 - e)
+-            cv2.ellipse(
+-                canvas,
+-                (sw // 2, sh // 2),
+-                (50, 50),
+-                0,
+-                -90,
+-                -90 + ang,
+-                (0, 255, 0),
+-                -1,
+-            )
+-        else:
+-            countdown = False
+-            fd_start = None
+-            txt = "Face not detected"
+-            fs = 2
+-            thick = 3
+-            size, _ = cv2.getTextSize(txt, cv2.FONT_HERSHEY_SIMPLEX, fs, thick)
+-            tx = (sw - size[0]) // 2
+-            ty = (sh + size[1]) // 2
+-            cv2.putText(
+-                canvas, txt, (tx, ty), cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 0, 255), thick
+-            )
+-        cv2.imshow("Calibration", canvas)
+-        if cv2.waitKey(1) == 27:
+-            return False
+-
+-
+-def _pulse_and_capture(
+-    gaze_estimator,
+-    cap,
+-    pts,
+-    sw: int,
+-    sh: int,
+-    pulse_d: float = 1.0,
+-    cd_d: float = 1.0,
+-):
++    global _countdown_start, _countdown
 +
-+        if camera_rotate == 1:
-+            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-+        elif camera_rotate == 2:
-+            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-+        cv2.imshow("thumbnail", frame)
-         f, blink = gaze_estimator.extract_features(frame)
-         face = f is not None and not blink
-         canvas = np.zeros((sh, sw, 3), dtype=np.uint8)
-@@ -104,6 +110,9 @@ def wait_for_face_and_countdown(cap, gaze_estimator, sw, sh, dur: int = 2) -> bo
-             cv2.putText(
-                 canvas, txt, (tx, ty), cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 0, 255), thick
-             )
-+        screen = screeninfo.get_monitors()[screen_index]
-+        cv2.moveWindow("Calibration", screen.x-1, screen.y-1)
-+        cv2.setWindowProperty("Calibration", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-         cv2.imshow("Calibration", canvas)
-         if cv2.waitKey(1) == 27:
-             return False
-@@ -117,6 +126,8 @@ def _pulse_and_capture(
-     sh: int,
-     pulse_d: float = 1.0,
-     cd_d: float = 1.0,
-+    screen_index: int = 0,
-+    camera_rotate: int = 0,
- ):
++    canvas = _background.copy()
++    sw = canvas.shape[1]
++    sh = canvas.shape[0]
++
++    f, blink = gaze_estimator.extract_features(frame)
++    face = f is not None and not blink
++    now = time.time()
++    if face:
++        if not _countdown:
++            _countdown_start = now
++            _countdown = True
++        elapsed = now - _countdown_start
++        if elapsed >= dur:
++            return True, canvas
++        t = elapsed / dur
++        e = t * t * (3 - 2 * t)
++        ang = 360 * (1 - e)
++        cv2.ellipse(
++            canvas,
++            (sw // 2, sh // 2),
++            (50, 50),
++            0,
++            -90,
++            -90 + ang,
++            (0, 255, 0),
++            -1,
++        )
++    else:
++        _countdown = False
++        _countdown_start = None
++        txt = "Face not detected"
++        fs = 2
++        thick = 3
++        size, _ = cv2.getTextSize(txt, cv2.FONT_HERSHEY_SIMPLEX, fs, thick)
++        tx = (sw - size[0]) // 2
++        ty = (sh + size[1]) // 2
++        cv2.putText(
++            canvas, txt, (tx, ty), cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 0, 255), thick
++        )
++    return False, canvas
++
++def _pulse(x, y):
++    e = time.time() - _ps
++    if e > _pulse_d:
++        return True, None
++
++    canvas = _background.copy()
++    radius = 15 + int(15 * abs(np.sin(2 * np.pi * e)))
++    _final_radius = radius
++    cv2.circle(canvas, (x, y), radius, (0, 255, 0), -1)
++
++    return False, canvas
++
++def _capture(x, y):
++    e = time.time() - _cs
++    if e > _cd_d:
++        return True, None
++
++    canvas = _background.copy()
++    cv2.circle(canvas, (x, y), _final_radius, (0, 255, 0), -1)
++    t = e / _cd_d
++    ease = t * t * (3 - 2 * t)
++    ang = 360 * (1 - ease)
++    cv2.ellipse(canvas, (x, y), (40, 40), 0, -90, -90 + ang, (255, 255, 255), 4)
++
++    return False, canvas
++
++def _pulse_and_capture(gaze_estimator,
++                       frame):
      """
      Shared pulse-and-capture loop for each calibration point
-@@ -134,6 +145,11 @@ def _pulse_and_capture(
-             ok, frame = cap.read()
-             if not ok:
-                 continue
-+            if camera_rotate == 1:
-+                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-+            elif camera_rotate == 2:
-+                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-+            cv2.imshow("thumbnail", frame)
-             canvas = np.zeros((sh, sw, 3), dtype=np.uint8)
-             radius = 15 + int(15 * abs(np.sin(2 * np.pi * e)))
-             final_radius = radius
-@@ -150,6 +166,10 @@ def _pulse_and_capture(
-             ok, frame = cap.read()
-             if not ok:
-                 continue
-+            if camera_rotate == 1:
-+                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-+            elif camera_rotate == 2:
-+                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-             canvas = np.zeros((sh, sw, 3), dtype=np.uint8)
-             cv2.circle(canvas, (x, y), final_radius, (0, 255, 0), -1)
-             t = e / cd_d
+     """
+-    feats, targs = [], []
+-
+-    for x, y in pts:
+-        # pulse
+-        ps = time.time()
+-        final_radius = 20
+-        while True:
+-            e = time.time() - ps
+-            if e > pulse_d:
+-                break
+-            ok, frame = cap.read()
+-            if not ok:
+-                continue
+-            canvas = np.zeros((sh, sw, 3), dtype=np.uint8)
+-            radius = 15 + int(15 * abs(np.sin(2 * np.pi * e)))
+-            final_radius = radius
+-            cv2.circle(canvas, (x, y), radius, (0, 255, 0), -1)
+-            cv2.imshow("Calibration", canvas)
+-            if cv2.waitKey(1) == 27:
+-                return None
+-        # capture
+-        cs = time.time()
+-        while True:
+-            e = time.time() - cs
+-            if e > cd_d:
+-                break
+-            ok, frame = cap.read()
+-            if not ok:
+-                continue
+-            canvas = np.zeros((sh, sw, 3), dtype=np.uint8)
+-            cv2.circle(canvas, (x, y), final_radius, (0, 255, 0), -1)
+-            t = e / cd_d
+-            ease = t * t * (3 - 2 * t)
+-            ang = 360 * (1 - ease)
+-            cv2.ellipse(canvas, (x, y), (40, 40), 0, -90, -90 + ang, (255, 255, 255), 4)
+-            cv2.imshow("Calibration", canvas)
+-            if cv2.waitKey(1) == 27:
+-                return None
+-            ft, blink = gaze_estimator.extract_features(frame)
+-            if ft is not None and not blink:
+-                feats.append(ft)
+-                targs.append([x, y])
+-
+-    return feats, targs
++    global _state, _ps, _cs, _pts_idx
++
++    x, y = _pts[_pts_idx]
++
++    if _state == STATE.PREPARING:
++        ok, canvas = wait_for_face_and_countdown(gaze_estimator, frame)
++        if ok:
++            _ps = time.time()
++            _state = STATE.PULSING
++            ok, canvas = _pulse(x, y)
++    elif _state == STATE.PULSING:
++        ok, canvas = _pulse(x, y)
++        if ok:
++            _cs = time.time()
++            _state = STATE.CAPTURING
++            ok, canvas = _capture(x, y)
++    elif _state == STATE.CAPTURING:
++        ok, canvas = _capture(x, y)
++        print("Extracting features")
++        ft, blink = gaze_estimator.extract_features(frame)
++        if ft is not None and not blink:
++            print("Point added")
++            _feats.append(ft)
++            _targs.append([x, y])
++        if ok:
++            _pts_idx += 1
++            _ps = time.time()
++            _state = STATE.PULSING
++            if _pts_idx == len(_pts):
++                print(f"Training with {len(_feats)} points")
++                gaze_estimator.train(np.array(_feats), np.array(_targs))
++                return True, _background
++            else:
++                x, y = _pts[_pts_idx]
++                ok, canvas = _pulse(x, y)
++
++    # capture
++
++    return False, canvas
++
++def _prepare_pulse_and_capture(pts,
++                               screen_width: int,
++                               screen_height: int,
++                               pulse_d: float = 1.0,
++                               cd_d: float = 1.0):
++    global _state, _pts, _pts_idx, _ps, _pulse_d, _cd_d, _background, _final_radius, _feats, _targs, _countdown
++    _state = STATE.PREPARING
++    _pts = pts
++    _pts_idx = 0
++    _pulse_d = pulse_d
++    _cd_d = cd_d
++    _background = np.zeros((screen_height, screen_width, 3), dtype=np.uint8)
++    _final_radius = 20
++    _feats, _targs = [], []
++    _countdown = False
++    _ps = time.time()
++    x, y = _pts[0]
++    _, canvas = _pulse(x, y)
++    return canvas
 diff --git a/src/eyetrax/calibration/dense_grid.py b/src/eyetrax/calibration/dense_grid.py
 index 98c56dc..beed024 100644
 --- a/src/eyetrax/calibration/dense_grid.py
@@ -125,45 +342,58 @@ index 98c56dc..beed024 100644
 +    return True
 \ No newline at end of file
 diff --git a/src/eyetrax/calibration/five_point.py b/src/eyetrax/calibration/five_point.py
-index 5b78fa9..a5f4cd2 100644
+index 5b78fa9..b727271 100644
 --- a/src/eyetrax/calibration/five_point.py
 +++ b/src/eyetrax/calibration/five_point.py
-@@ -10,26 +10,29 @@ from eyetrax.utils.screen import get_screen_size
+@@ -2,6 +2,7 @@ import cv2
+ import numpy as np
+ 
+ from eyetrax.calibration.common import (
++    _prepare_pulse_and_capture,
+     _pulse_and_capture,
+     compute_grid_points,
+     wait_for_face_and_countdown,
+@@ -10,26 +11,20 @@ from eyetrax.utils.screen import get_screen_size
  from eyetrax.utils.video import open_camera
  
  
 -def run_5_point_calibration(gaze_estimator, camera_index: int = 0):
-+def run_5_point_calibration(gaze_estimator, camera_index: int = 0, screen_index: int = 0, camera_rotate: int = 0):
-     """
-     Faster five-point calibration
-     """
+-    """
+-    Faster five-point calibration
+-    """
 -    sw, sh = get_screen_size()
-+    sw, sh = get_screen_size(screen_index)
++order = [(1, 1), (0, 0), (2, 0), (0, 2), (2, 2)]
++pts = None
  
-     cap = open_camera(camera_index)
+-    cap = open_camera(camera_index)
 -    if not wait_for_face_and_countdown(cap, gaze_estimator, sw, sh, 2):
-+    if not wait_for_face_and_countdown(cap, gaze_estimator, sw, sh, 2, screen_index, camera_rotate=camera_rotate):
-         cap.release()
-         cv2.destroyAllWindows()
+-        cap.release()
+-        cv2.destroyAllWindows()
 -        return
-+        return False
++def prepare_5_point_calibration(screen_width, screen_height):
++    pts = compute_grid_points(order, screen_width, screen_height)
++    canvas = _prepare_pulse_and_capture(pts, screen_width, screen_height)
++    return canvas
  
-     order = [(1, 1), (0, 0), (2, 0), (0, 2), (2, 2)]
-     pts = compute_grid_points(order, sw, sh)
+-    order = [(1, 1), (0, 0), (2, 0), (0, 2), (2, 2)]
+-    pts = compute_grid_points(order, sw, sh)
  
 -    res = _pulse_and_capture(gaze_estimator, cap, pts, sw, sh)
-+    res = _pulse_and_capture(gaze_estimator, cap, pts, sw, sh, camera_rotate=camera_rotate)
-     cap.release()
-     cv2.destroyAllWindows()
-     if res is None:
+-    cap.release()
+-    cv2.destroyAllWindows()
+-    if res is None:
 -        return
-+        return False
-     feats, targs = res
-     if feats:
-         gaze_estimator.train(np.array(feats), np.array(targs))
-+    else:
-+        return False
-+    return True
+-    feats, targs = res
+-    if feats:
+-        gaze_estimator.train(np.array(feats), np.array(targs))
++def run_5_point_calibration(gaze_estimator,
++                            frame):
++    """
++    Faster five-point calibration
++    """
++    ok, canvas = _pulse_and_capture(gaze_estimator,
++                                    frame)
++    return ok, canvas
 diff --git a/src/eyetrax/calibration/lissajous.py b/src/eyetrax/calibration/lissajous.py
 index 1276b8c..a0438ab 100644
 --- a/src/eyetrax/calibration/lissajous.py
@@ -259,10 +489,19 @@ index 9687f91..3efb24e 100644
 +    return True
  
 diff --git a/src/eyetrax/cli.py b/src/eyetrax/cli.py
-index d1a0236..0b68a12 100644
+index d1a0236..f42ed35 100644
 --- a/src/eyetrax/cli.py
 +++ b/src/eyetrax/cli.py
-@@ -23,6 +23,18 @@ def parse_common_args():
+@@ -8,7 +8,7 @@ def parse_common_args():
+     parser.add_argument(
+         "--filter",
+         choices=["kalman", "kalman_ema", "kde", "none"],
+-        default="none",
++        default="kde",
+         help="Select the filter to apply to gaze estimation",
+     )
+     parser.add_argument(
+@@ -23,10 +23,22 @@ def parse_common_args():
          default=0,
          help="Camera index for video capture, default is 0 (first camera)",
      )
@@ -281,7 +520,12 @@ index d1a0236..0b68a12 100644
      parser.add_argument(
          "--calibration",
          choices=["9p", "5p", "lissajous", "dense"],
-@@ -70,6 +82,18 @@ def parse_common_args():
+-        default="9p",
++        default="5p",
+         help="Calibration method for gaze estimation",
+     )
+     parser.add_argument(
+@@ -70,6 +82,17 @@ def parse_common_args():
          default=None,
          help="Path to a previously-trained gaze model",
      )
@@ -299,7 +543,7 @@ index d1a0236..0b68a12 100644
 +    )
  
      return parser.parse_args()
- 
+-
 diff --git a/src/eyetrax/gaze.py b/src/eyetrax/gaze.py
 index 03373ad..b91809f 100644
 --- a/src/eyetrax/gaze.py

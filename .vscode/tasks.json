@@ -4,7 +4,7 @@
         {
             "label": "debug",
             "type": "shell",
-            "command": "source ./venv/bin/activate ; cd EyeWriter/ ; ( rm ./buildlog.txt || true) && buildozer android debug | tee ./buildlog.txt",
+            "command": "source ./venv/bin/activate ; cd EyeWriter/ ; rm -f ./buildlog.txt ; buildozer android debug | tee ./buildlog.txt",
             "args": [
 
             ],
@@ -72,11 +72,17 @@
                 "--",
                 "source ./venv/bin/activate",
                 "cd EyeWriter/",
-                "( rm ./buildlog.txt || true) && buildozer android debug | tee ./buildlog.txt",
+                "rm -f ./buildlog.txt",
+                "if [[ ${input:cleanmake} -eq 1 ]] ; then",
+                "  opt_cleanmake=\"clean\"",
+                "fi",
+                "buildozer android $opt_cleanmake debug | tee ./buildlog.txt",
                 "if [ ${input:should-wait} -eq 1 ] ; then",
                 "  echo \"Press Enter to continue...\" ; read",
                 "fi",
-                "source ./venv/bin/activate ; cd EyeWriter/ ; buildozer android deploy run logcat | grep \"python\"",
+                "{",
+                "  buildozer android deploy run logcat | grep \"python\"",
+                "}"
             ],
             "options": {
                 "env": {
@@ -90,6 +96,13 @@
         {
             "id": "should-wait",
             "description": "Ask input to continue",
+            "type": "pickString",
+            "options": ["0", "1"],
+            "default": "0"
+        },
+        {
+            "id": "cleanmake",
+            "description": "Clean compilation",
             "type": "pickString",
             "options": ["0", "1"],
             "default": "0"

@@ -5,3 +5,4 @@
 *.buildozer
 *bin
 EyeWriter/buildlog.txt
+tmp/
